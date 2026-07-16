@@ -134,6 +134,13 @@
   .modal h2{ font-family:'Fraunces',serif; font-size:19px; margin:0 0 6px; }
   .modal p{ font-size:13px; color:var(--ink-soft); line-height:1.5; margin:0 0 16px; }
   .modal .btn{ width:100%; justify-content:center; }
+
+  .footer{
+    position:absolute; bottom:8px; right:12px; z-index:1000;
+    font-family:'JetBrains Mono', monospace; font-size:9.5px;
+    color:var(--ink-soft); opacity:0.75; pointer-events:none;
+    background:rgba(251,249,243,0.6); padding:2px 6px; border-radius:2px;
+  }
 </style>
 </head>
 <body>
@@ -145,7 +152,7 @@
     <span class="paw">🐾</span>
     <div>
       <h1>Columbus Dog Treat Trail</h1>
-      <div class="subtitle">Stashes spotted on foot — v0.1 (seed)</div>
+      <div class="subtitle">Stashes spotted on foot — v0.5</div>
     </div>
   </div>
   <div class="actions">
@@ -162,7 +169,10 @@
 <div class="legend">
   <div class="row"><span class="badge verified">Verified</span> confirmed on foot</div>
   <div class="row" style="margin-top:4px;"><span class="badge unverified">Unverified</span> reported, not yet checked</div>
+  <div class="row" style="margin-top:4px;">Dashed ring = seasonal</div>
 </div>
+
+<div class="footer">Columbus Dog Treat Trail v0.5 · &copy; 2026 Steven Needham</div>
 
 <div class="modal-backdrop" id="modal">
   <div class="modal">
@@ -191,7 +201,16 @@
      ========================================================= */
   const CONFIG = {
     SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRConYdz281L3B8jXoR6ocsHiHzox0rLsPauOPp3uTj9OWjNj2l1lHhGBp4X3Zo56LK0UaoXd4R5ulB/pub?gid=0&single=true&output=csv",
-    FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSduyp92-tJt_xq7tdGpfLV-ERWM8hwAXQV95OAqqAdJn3SPNQ/viewform"
+    FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSduyp92-tJt_xq7tdGpfLV-ERWM8hwAXQV95OAqqAdJn3SPNQ/viewform",
+    // v0.5: paste your verify.gs Web App deployment URL here to make
+    // "Mark verified" persist to the Stops sheet. Leave blank and the
+    // button falls back to a local-only preview (old v0.1 behavior).
+    VERIFY_URL: "",
+    // v0.5: how often to re-pull the Sheet in the background, and the
+    // minimum gap between any two fetches (including ones triggered by
+    // panning the map) so it can't be hammered by fast movement.
+    REFRESH_INTERVAL_MS: 5 * 60 * 1000,
+    REFRESH_MIN_GAP_MS: 60 * 1000
   };
 
   /* =========================================================
@@ -223,6 +242,13 @@
   ];
 
   let stops = SEED_STOPS;
+
+  // v0.5: id -> timestamp of a just-clicked "Mark verified", so a
+  // stale Sheet read (Google's publish-to-web cache can lag a few
+  // minutes) can't flip a stop back to unverified in front of the
+  // person who just verified it.
+  let pendingVerify = new Map();
+  let lastFetchTime = 0;
 
   // Parses the published CSV into the same shape as SEED_STOPS,
   // coercing lat/lng to numbers and dropping malformed rows.
@@ -258,6 +284,43 @@
     }
   }
 
+  // v0.5: merges a fresh load with what's on screen, protecting any
+  // stop the visitor just verified from being reverted by a stale read.
+  function mergeStops(incoming) {
+    const now = Date.now();
+    return incoming.map(newStop => {
+      const pendingAt = pendingVerify.get(String(newStop.id));
+      if (pendingAt && now - pendingAt < 3 * 60 * 1000) {
+        const local = stops.find(s => String(s.id) === String(newStop.id));
+        if (local && isVerified(local.status)) return local;
+      }
+      return newStop;
+    });
+  }
+
+  // v0.5: re-pullable version of the initial load, rate-limited so
+  // fast panning or the background timer can't hammer the Sheet.
+  async function refreshStops(force = false) {
+    const now = Date.now();
+    if (!force && now - lastFetchTime < CONFIG.REFRESH_MIN_GAP_MS) return;
+    lastFetchTime = now;
+    try {
+      const incoming = await loadStops();
+      stops = mergeStops(incoming);
+      render();
+    } catch (err) {
+      console.warn("Refresh failed, keeping current stops:", err);
+    }
+  }
+
+  // v0.5: status can now be verified/unverified/seasonal-verified/
+  // seasonal-unverified. These two helpers are the only places that
+  // need to know about that, so the rest of the code just asks
+  // "is this verified" / "is this seasonal" without caring which
+  // exact string it is.
+  function isVerified(status) { return status === "verified" || status === "seasonal-verified"; }
+  function isSeasonal(status) { return status === "seasonal-verified" || status === "seasonal-unverified"; }
+
   const TYPE_META = {
     treat_stand:   { label: "Treat stand",   color: "#B5502C" },
     stick_library: { label: "Stick library", color: "#4C6B4F" },
@@ -280,12 +343,13 @@
 
   function makeIcon(type, status) {
     const color = TYPE_META[type]?.color || "#B5502C";
-    const ring = status === "verified" ? "#4C6B4F" : "#C68A2E";
+    const ring = isVerified(status) ? "#4C6B4F" : "#C68A2E";
+    const borderStyle = isSeasonal(status) ? "dashed" : "solid";
     return L.divIcon({
       className: '',
       html: `<div style="
         width:22px;height:22px;border-radius:50%;
-        background:${color}; border:3px solid ${ring};
+        background:${color}; border:3px ${borderStyle} ${ring};
         box-shadow:1px 1px 0 rgba(43,42,38,0.3);
       "></div>`,
       iconSize: [22, 22],
@@ -295,16 +359,17 @@
 
   function popupHTML(stop) {
     const meta = TYPE_META[stop.type] || { label: stop.type };
-    const badge = stop.status === "verified"
+    const badge = isVerified(stop.status)
       ? '<span class="badge verified">Verified</span>'
       : '<span class="badge unverified">Unverified</span>';
+    const seasonalTag = isSeasonal(stop.status) ? ' · <span class="badge unverified" style="background:var(--ink-soft)">Seasonal</span>' : '';
     return `
       <div class="pop-name">${stop.name}</div>
-      <div class="pop-meta">${meta.label} · ${stop.neighborhood} · ${badge}</div>
+      <div class="pop-meta">${meta.label} · ${stop.neighborhood} · ${badge}${seasonalTag}</div>
       <div class="pop-notes">${stop.notes || ""}</div>
       <div class="pop-actions">
         <a class="pop-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}">Directions</a>
-        ${stop.status !== "verified" ? `<button class="pop-btn confirm" data-confirm="${stop.id}">Mark verified</button>` : ""}
+        ${!isVerified(stop.status) ? `<button class="pop-btn confirm" data-confirm="${stop.id}">Mark verified</button>` : ""}
       </div>
     `;
   }
@@ -321,15 +386,41 @@
         marker.on('popupopen', () => {
           const btn = document.querySelector(`[data-confirm="${stop.id}"]`);
           if (btn) {
-            btn.addEventListener('click', () => {
-              stop.status = "verified";
-              marker.setIcon(makeIcon(stop.type, stop.status));
-              marker.setPopupContent(popupHTML(stop));
-              // Note: this is in-memory only for this session, just
-              // a quick visual preview. To persist it, update the
-              // matching row's `status` to "verified" (and correct
-              // lat/lng if needed) in the Stops sheet — the next
-              // page load will pick it up from there.
+            btn.addEventListener('click', async () => {
+              if (!CONFIG.VERIFY_URL) {
+                // No write-back endpoint configured — same behavior as
+                // v0.1: local-only preview, and you flip `status` by
+                // hand in Stops to make it stick.
+                stop.status = isSeasonal(stop.status) ? "seasonal-verified" : "verified";
+                marker.setIcon(makeIcon(stop.type, stop.status));
+                marker.setPopupContent(popupHTML(stop));
+                return;
+              }
+              btn.disabled = true;
+              btn.textContent = "Saving...";
+              try {
+                const res = await fetch(CONFIG.VERIFY_URL, {
+                  method: "POST",
+                  body: new URLSearchParams({ id: stop.id })
+                });
+                const result = await res.json();
+                if (result.ok) {
+                  if (result.changed) {
+                    stop.status = result.status;
+                    pendingVerify.set(String(stop.id), Date.now());
+                  }
+                  marker.setIcon(makeIcon(stop.type, stop.status));
+                  marker.setPopupContent(popupHTML(stop));
+                } else {
+                  alert("Couldn't save that — try again in a bit.");
+                  btn.disabled = false;
+                  btn.textContent = "Mark verified";
+                }
+              } catch (err) {
+                alert("Network error — try again.");
+                btn.disabled = false;
+                btn.textContent = "Mark verified";
+              }
             });
           }
         });
@@ -356,10 +447,12 @@
     filtersEl.appendChild(chip);
   });
 
-  loadStops().then(loaded => {
-    stops = loaded;
-    render();
-  });
+  // v0.5: initial load, then keep the map current in the background
+  // (timer) and whenever someone pans/zooms to a new area (moveend) —
+  // both share the same rate limit so neither can spam the Sheet.
+  refreshStops(true);
+  map.on('moveend', () => refreshStops(false));
+  setInterval(() => refreshStops(false), CONFIG.REFRESH_INTERVAL_MS);
 
   // Suggest-a-stop modal content: point at the real Form once
   // configured, otherwise show the original "not set up yet" copy.

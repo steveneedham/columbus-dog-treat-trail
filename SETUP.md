@@ -111,7 +111,7 @@ automates the copy-paste, not the on-foot check.
    different order, adjust the indices in the script accordingly.
 
 2. **Extensions → Apps Script**, clear the placeholder code, and
-   paste in [`apps-script/approval.gs`](./apps-script/approval.gs)
+   paste in [`approval.gs`](./approval.gs)
    from this repo.
 3. Click the clock icon (**Triggers**) in the left sidebar → **+ Add
    Trigger**, and set:
@@ -137,3 +137,46 @@ point — glance at it (or walk it) before manually flipping its
 That's it — no redeploy needed for new stops, since the site reads the
 Sheet at page load. You only touch `index.html` again if you change the
 schema or want to tweak the two CONFIG values.
+
+## 4. v0.5: real "Mark verified" persistence (optional, recommended)
+
+Before v0.5, the map's "Mark verified" button only updated the
+visitor's own browser — nothing was saved anywhere. This step makes it
+actually write back to `Stops`.
+
+1. In the same Apps Script project as `approval.gs`, add a new script
+   file (**File → New → Script**) and paste in
+   [`verify.gs`](./verify.gs).
+2. **Deploy → New deployment → Web app**:
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+   - Deploy, authorize the prompt, and copy the deployment URL.
+3. Paste that URL into `CONFIG.VERIFY_URL` in `index.html`. Leave it
+   blank to keep the old v0.1 local-only-preview behavior.
+
+Read the security note at the top of `verify.gs` before deploying — a
+static site can't have real authentication, so the endpoint is
+intentionally restricted to one-way writes (unverified → verified
+only) rather than protected by a login.
+
+## 5. v0.5: seasonal stops (optional)
+
+If some stops (e.g. outdoor toy boxes or water bowls) go dormant in
+winter, you can flag them as seasonal instead of deleting the row:
+
+1. In the Google Form, add a new question: **"Is this available
+   year-round or seasonal?"** (dropdown or short answer — the script
+   only checks whether the answer starts with "seasonal", case-
+   insensitive).
+2. Since this question is added after the sheet already has data,
+   Google Forms will append its answers as a **new column at the end**
+   of `Form Responses 1` — your existing `Approve?`/`Copied` columns
+   won't move. `approval.gs` already expects this new column and will
+   write `seasonal-unverified` instead of `unverified` when the answer
+   says seasonal.
+3. To flip a seasonal stop to verified, set its `status` in `Stops` to
+   `seasonal-verified` (or use the persisted "Mark verified" button
+   from step 4, which handles this automatically).
+
+On the map, seasonal stops get a **dashed ring** instead of a solid
+one — see the legend.

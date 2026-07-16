@@ -2,6 +2,7 @@
  * Copyright (c) 2026 Steven Needham — MIT License (see repo LICENSE)
  *
  * Columbus Dog Treat Trail — approval automation (geocoding version)
+ * App version: v0.5
  * ---------------------------------------------------------------
  * Bound to the "Columbus Dog Treat Trail — Data" spreadsheet.
  * Sheet: Form Responses 1 (gid=1965108209)
@@ -17,10 +18,19 @@
  *   H Email                (the optional question — not used here)
  *   I Approve?             (type "Y" to approve)
  *   J Copied                (script writes "Copied" here once processed)
+ *   K Seasonal?             (v0.5, optional new form question — "Year-
+ *                            round" or "Seasonal". If you add this
+ *                            question to the live Form, Google Sheets
+ *                            appends its answers as a new column at the
+ *                            end, so existing I/J stay put. If you
+ *                            haven't added the question yet, leave K
+ *                            blank on all rows — it's treated as
+ *                            "Year-round" when empty.)
  *
  * FLOW: type "Y" in column I on a response row → script geocodes the
- * address, appends a row to Stops with status "unverified", and marks
- * column J "Copied" so re-triggering the same row is a no-op.
+ * address, appends a row to Stops with status "unverified" (or
+ * "seasonal-unverified" if column K says seasonal), and marks column J
+ * "Copied" so re-triggering the same row is a no-op.
  *
  * This does NOT require walking the spot first — it publishes an
  * approximate, unverified pin straight from the typed address. That's
@@ -64,6 +74,11 @@ function onApproveEdit(e) {
   var address = data[2], type = data[3], neighborhood = data[4],
       notes = data[5], submittedBy = data[6];
 
+  // v0.5: optional 11th column ("Seasonal?"). Blank/missing = year-round.
+  var seasonalAnswer = sheet.getRange(row, 11).getValue();
+  var isSeasonal = String(seasonalAnswer).trim().toLowerCase().indexOf('seasonal') === 0;
+  var status = isSeasonal ? 'seasonal-unverified' : 'unverified';
+
   var stops = e.source.getSheetByName('Stops');
   var lastRow = stops.getLastRow();
   var newId = 1;
@@ -86,6 +101,6 @@ function onApproveEdit(e) {
 
   var typeFormatted = String(type).trim().toLowerCase().replace(/\s+/g, '_');
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  stops.appendRow([newId, address, lat, lng, typeFormatted, neighborhood, 'unverified', notes, submittedBy, today]);
+  stops.appendRow([newId, address, lat, lng, typeFormatted, neighborhood, status, notes, submittedBy, today]);
   flagCell.setValue('Copied');
 }
