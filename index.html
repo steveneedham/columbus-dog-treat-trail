@@ -180,22 +180,17 @@
        neighborhood, status: 'verified' | 'unverified',
        notes, submitted_by, date_added
      }
-
-     SEED NOTE: coordinates below are an approximate German
-     Village placeholder (near Stewart Ave / Sycamore St) —
-     NOT a confirmed pin. Walk it, then update lat/lng to the
-     exact spot and flip status to 'verified'.
      ========================================================= */
   const stops = [
     {
       id: 1,
-      name: "German Village biscuit stash (unconfirmed spot)",
-      lat: 39.9469,
-      lng: -82.9934,
+      name: "Mutts & Co.",
+      lat: 39.9446252,
+      lng: -82.9871988,
       type: "treat_stand",
       neighborhood: "German Village",
-      status: "unverified",
-      notes: "Spotted on a dog-walking route — exact address still needs confirming on foot. Update coordinates once located.",
+      status: "verified",
+      notes: "Pet store at 364 E Whittier St — self-serve dog wash, treats, toys, and food. First confirmed stop on the trail.",
       submitted_by: "Steven",
       date_added: "2026-07-16"
     }
@@ -209,7 +204,7 @@
     mixed:         { label: "Mixed",          color: "#C68A2E" }
   };
 
-  const map = L.map('map', { zoomControl: false }).setView([39.9469, -82.9934], 15);
+  const map = L.map('map', { zoomControl: false }).setView([39.9446252, -82.9871988], 16);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
