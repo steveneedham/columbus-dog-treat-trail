@@ -16,6 +16,7 @@ Seed / v0.2 — one placeholder pin in German Village, marked **unverified** pen
 - Per-location popups with Google Maps directions
 - "Suggest a stop" — opens a Google Form once configured; falls back to an email link otherwise
 - Data lives in a published Google Sheet, fetched as CSV on page load — no redeploy needed to add a stop
+- Approving a submission is a checkbox, not a copy-paste — see the Apps Script in `apps-script/`
 
 ## Data
 
