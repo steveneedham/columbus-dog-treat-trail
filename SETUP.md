@@ -14,15 +14,21 @@ Three pieces to set up, in order:
 2. Rename the first tab to `Stops`. Header row (exact names, this order):
 
    ```
-   id  name  lat  lng  type  neighborhood  status  notes  submitted_by  date_added
+   id  name  lat  lng  type  neighborhood  status  notes  submitted_by  date_added  venue  photo_url
    ```
+
+   `venue` and `photo_url` are new in v0.5 — `venue` holds the raw
+   "private home or business" answer as free text (informational, not
+   used for filtering yet), and `photo_url` holds a direct-viewable
+   link to the submitted photo, if any (see step 3 for how that gets
+   populated and shared).
 
 3. Add the current seed row so the live sheet matches what's already on
    the map:
 
-   | id | name | lat | lng | type | neighborhood | status | notes | submitted_by | date_added |
-   |----|------|-----|-----|------|--------------|--------|-------|--------------|------------|
-   | 1 | German Village biscuit stash (unconfirmed spot) | 39.9469 | -82.9934 | treat_stand | German Village | unverified | Spotted on a dog-walking route — exact address still needs confirming on foot. | Steven | 2026-07-16 |
+   | id | name | lat | lng | type | neighborhood | status | notes | submitted_by | date_added | venue | photo_url |
+   |----|------|-----|-----|------|--------------|--------|-------|--------------|------------|-------|-----------|
+   | 1 | German Village biscuit stash (unconfirmed spot) | 39.9469 | -82.9934 | treat_stand | German Village | unverified | Spotted on a dog-walking route — exact address still needs confirming on foot. | Steven | 2026-07-16 | | |
 
    `type` must be one of: `treat_stand`, `stick_library`, `water_bowl`,
    `toy_box`, `mixed` — anything else gets silently dropped by the site's
@@ -52,15 +58,28 @@ anyone with the form link could otherwise put unverified junk straight
 on the map. Instead it writes to its own tab, and you promote entries
 to `Stops` by hand once you've walked them.
 
-1. Create a Google Form, e.g. **"Suggest a Dog Treat Trail Stop"**, with:
-   - **Location** (short answer, required) — "Address or nearest
-     cross-streets"
+1. Create a Google Form, e.g. **"Suggest a Dog Treat Trail Stop"**.
+   The live form currently has:
+   - **Stop name** (short answer, required)
    - **Type** (dropdown, required) — Treat stand / Stick library /
      Water bowl / Toy box / Mixed / Not sure
    - **Neighborhood** (short answer, optional)
    - **Notes** (paragraph, optional) — what they saw, condition, etc.
    - **Your name** (short answer, optional)
    - **Email** (short answer, optional) — in case you want to follow up
+   - **Address or cross streets** (short answer, required) — used only
+     for geocoding, not stored on the pin
+   - **Is this available year-round, or seasonal?** (dropdown/short
+     answer) — see step 5
+   - **Is this at a private home or a business?** (not read by
+     `approval.gs` yet — informational for your own review)
+   - **Photo** (file upload, optional — not read by `approval.gs` yet)
+
+   You don't need all of these to get started — `approval.gs` only
+   requires headers containing `stop name`, `type`, `neighborhood`,
+   `notes`, `your name`, `address or cross`, and `year-round` to exist
+   somewhere in the sheet (see step 3). Add or reorder questions
+   freely; the script finds each field by header text, not position.
 
 2. In the Form's **Responses** tab, click the Sheets icon and link
    responses to the same spreadsheet from step 1, as a new tab (Google
@@ -94,21 +113,25 @@ copy-paste with no reminder. **Step 3 below automates it.**
 Instead of retyping each response into `Stops` by hand, add a small
 Apps Script so approving a spot is: type "Y" in one cell, done. It
 geocodes the typed address automatically and always files the new
-row as `unverified` — flipping something to `verified` still requires
-you to actually confirm it and edit `Stops` directly, so this only
-automates the copy-paste, not the on-foot check.
+row as `unverified` (or `seasonal-unverified`, see step 5) — flipping
+something to `verified` still requires you to actually confirm it and
+edit `Stops` directly (or use the "Mark verified" button from step 4),
+so this only automates the copy-paste, not the on-foot check.
 
-1. In the `Form Responses` tab, add two columns right after the
-   form's own columns: **Approve?** and a blank flag column (the
-   script writes "Copied" into the second one after processing —
-   no header needed there, just leave it blank).
+1. In the `Form Responses` tab, add two columns after the form's own
+   columns: **Approve?** and **Copied?** (the script writes "Copied"
+   into that second one after processing — leave it blank otherwise).
 
-   **Verify your actual column order first.** The script reads by
-   fixed position (columns A–H for the form fields, I for Approve?,
-   J for the flag) — it assumes: Timestamp, Email Address (if
-   "Collect email addresses" is on), Address, Type, Neighborhood,
-   Notes, Your name, Email. If your form's columns land in a
-   different order, adjust the indices in the script accordingly.
+   **The script reads columns by header text, not position** — it
+   looks for a header containing `"stop name"`, `"type"`,
+   `"neighborhood"`, `"notes"`, `"your name"`, `"address or cross"`,
+   `"year-round"`, `"private home or a business"`, `"photo"`,
+   `"approve"`, and `"copied"` (see `HEADER_KEYWORDS` at the top of
+   `approval.gs`). This means it doesn't matter which order your
+   form's questions land in — only that each header still contains
+   its keyword somewhere. If you rename a question enough that the
+   keyword no longer matches, the script throws a clear error naming
+   the missing keyword rather than silently reading the wrong cell.
 
 2. **Extensions → Apps Script**, clear the placeholder code, and
    paste in [`approval.gs`](./approval.gs)
@@ -120,14 +143,20 @@ automates the copy-paste, not the on-foot check.
    - Event source: `From spreadsheet`
    - Event type: `On edit`
 
-   Save, then approve the Google permission prompt. (`Maps` is a
-   built-in Apps Script service — no API key or billing needed.)
+   Save, then approve the Google permission prompt — this now
+   includes **Drive**, alongside Sheets and Maps, because approving a
+   stop with a photo makes that one photo file viewable (see the
+   PHOTO HANDLING note at the top of `approval.gs` for exactly what
+   gets shared and what doesn't).
 
 From then on: type `Y` in the `Approve?` cell for a response row. The
 script geocodes the address, slugifies the type (`"Toy box"` →
-`"toy_box"`), appends a row to `Stops` with the next `id`, today's
-date, and status always `unverified`, then writes `Copied` in the
-flag column so re-entering `Y` later won't duplicate it.
+`"toy_box"`), appends a row to `Stops` with the next `id`, the
+**Stop name** answer as the pin's name, today's date, status
+`unverified` (or `seasonal-unverified`), the raw **venue** answer, and
+— if a photo was uploaded — a public view link for it, then writes
+`Copied` in the flag column so re-entering `Y` later won't duplicate
+it.
 
 Because the coordinates come from geocoding the typed address rather
 than a confirmed pin, treat a freshly-approved row as a starting
@@ -162,21 +191,15 @@ only) rather than protected by a login.
 ## 5. v0.5: seasonal stops (optional)
 
 If some stops (e.g. outdoor toy boxes or water bowls) go dormant in
-winter, you can flag them as seasonal instead of deleting the row:
+winter, you can flag them as seasonal instead of deleting the row.
+This is already live on the form (the "Is this available year-round,
+or seasonal?" question) — `approval.gs` finds it by header text
+wherever it lands in the sheet and writes `seasonal-unverified`
+instead of `unverified` when the answer starts with "seasonal".
 
-1. In the Google Form, add a new question: **"Is this available
-   year-round or seasonal?"** (dropdown or short answer — the script
-   only checks whether the answer starts with "seasonal", case-
-   insensitive).
-2. Since this question is added after the sheet already has data,
-   Google Forms will append its answers as a **new column at the end**
-   of `Form Responses 1` — your existing `Approve?`/`Copied` columns
-   won't move. `approval.gs` already expects this new column and will
-   write `seasonal-unverified` instead of `unverified` when the answer
-   says seasonal.
-3. To flip a seasonal stop to verified, set its `status` in `Stops` to
-   `seasonal-verified` (or use the persisted "Mark verified" button
-   from step 4, which handles this automatically).
+To flip a seasonal stop to verified, set its `status` in `Stops` to
+`seasonal-verified` (or use the persisted "Mark verified" button from
+step 4, which handles this automatically).
 
 On the map, seasonal stops get a **dashed ring** instead of a solid
 one — see the legend.

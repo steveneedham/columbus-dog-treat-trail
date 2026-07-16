@@ -120,6 +120,11 @@
   .pop-btn.confirm{ background:var(--moss); color:var(--white); border-color:var(--moss); }
   .pop-btn.confirm:hover{ background:#3B5540; }
   .pop-btn:hover{ background:var(--ink); color:var(--white); }
+  .pop-photo{
+    width:100%; height:110px; object-fit:cover; border-radius:3px;
+    border:1px solid var(--line); margin-bottom:8px; display:block;
+  }
+  .pop-venue{ font-size:11px; color:var(--ink-soft); margin-bottom:6px; font-style:italic; }
 
   /* Suggest-a-stop modal */
   .modal-backdrop{
@@ -222,8 +227,10 @@
      {
        id, name, lat, lng,
        type: 'treat_stand' | 'stick_library' | 'water_bowl' | 'toy_box' | 'mixed',
-       neighborhood, status: 'verified' | 'unverified',
-       notes, submitted_by, date_added
+       neighborhood, status: 'verified' | 'unverified' | 'seasonal-verified' | 'seasonal-unverified',
+       notes, submitted_by, date_added,
+       venue,      // v0.5: raw "private home / business / public space" answer, optional
+       photo_url   // v0.5: direct-viewable photo link, optional
      }
      ========================================================= */
   const SEED_STOPS = [
@@ -237,7 +244,9 @@
       status: "unverified",
       notes: "Spotted on a dog-walking route — exact address still needs confirming on foot. Update coordinates once located.",
       submitted_by: "Steven",
-      date_added: "2026-07-16"
+      date_added: "2026-07-16",
+      venue: "",
+      photo_url: ""
     }
   ];
 
@@ -265,7 +274,9 @@
         status: (row.status || "unverified").trim(),
         notes: row.notes || "",
         submitted_by: row.submitted_by || "",
-        date_added: row.date_added || ""
+        date_added: row.date_added || "",
+        venue: row.venue || "",
+        photo_url: row.photo_url || ""
       }))
       .filter(s => s.name && Number.isFinite(s.lat) && Number.isFinite(s.lng) && TYPE_META_KEYS.includes(s.type));
   }
@@ -365,7 +376,9 @@
     const seasonalTag = isSeasonal(stop.status) ? ' · <span class="badge unverified" style="background:var(--ink-soft)">Seasonal</span>' : '';
     return `
       <div class="pop-name">${stop.name}</div>
+      ${stop.photo_url ? `<img class="pop-photo" src="${stop.photo_url}" alt="${stop.name}" loading="lazy" onerror="this.remove()">` : ""}
       <div class="pop-meta">${meta.label} · ${stop.neighborhood} · ${badge}${seasonalTag}</div>
+      ${stop.venue ? `<div class="pop-venue">${stop.venue}</div>` : ""}
       <div class="pop-notes">${stop.notes || ""}</div>
       <div class="pop-actions">
         <a class="pop-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}">Directions</a>

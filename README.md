@@ -19,6 +19,7 @@ get added by hand or via submitted tips.
 - Type filters: treat stand, stick library, water bowl, toy box, mixed
 - Verified / unverified status per stop — "Mark verified" persists to the Sheet via a small Apps Script Web App (`verify.gs`); falls back to a local-only preview if that's not deployed yet
 - Optional seasonal status (dashed ring on the map) for stops that go dormant part of the year
+- Optional submitted photo shown in the popup, and a note on whether a stop is at a private home, business, or public space
 - Background auto-refresh (every 5 min, and whenever the map is panned/zoomed) so the map stays current without a page reload
 - "Near me" geolocation
 - Per-location popups with Google Maps directions
@@ -36,7 +37,9 @@ Stops live in a Google Sheet (the `Stops` tab), published to the web as CSV and 
   type: 'treat_stand' | 'stick_library' | 'water_bowl' | 'toy_box' | 'mixed',
   neighborhood,
   status: 'verified' | 'unverified' | 'seasonal-verified' | 'seasonal-unverified',
-  notes, submitted_by, date_added
+  notes, submitted_by, date_added,
+  venue,      // optional — "private home", "business", "public space", as submitted
+  photo_url   // optional — direct-viewable link to the submitted photo
 }
 ```
 
