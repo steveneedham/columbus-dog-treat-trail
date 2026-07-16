@@ -2,23 +2,24 @@
 
 An interactive map of little dog treat stands, stick libraries, water bowls, and toy boxes spotted on walks around Columbus. Started after noticing a cluster of biscuit stashes in German Village while dog walking — built as a companion to [Columbus PantryMap](https://github.com/steveneedham/columbus-pantry-map), but leaning more "fun neighborhood find" than mutual aid.
 
-**Live map:** _(add your GitHub Pages link here after first push, e.g. `https://steveneedham.github.io/columbus-dog-treat-trail/`)_
+**Live map:** https://steveneedham.github.io/columbus-dog-treat-trail/
 
 ## Status
 
-Seed / v0.1 — one placeholder pin in German Village, marked **unverified** pending an on-foot check. This is the starting point for crowdsourcing a real dataset; there's no existing directory for this (unlike the pantry map's source orgs), so locations get added by hand or via submitted tips.
+Seed / v0.2 — one placeholder pin in German Village, marked **unverified** pending an on-foot check. This is the starting point for crowdsourcing a real dataset; there's no existing directory for this (unlike the pantry map's source orgs), so locations get added by hand or via submitted tips.
 
 ## Features
 
 - Type filters: treat stand, stick library, water bowl, toy box, mixed
-- Verified / unverified status per stop, with an on-map "mark verified" action
+- Verified / unverified status per stop, with an on-map "mark verified" preview action
 - "Near me" geolocation
 - Per-location popups with Google Maps directions
-- "Suggest a stop" — currently routes to email; a real submission form (Google Form → Sheet → JSON) is the planned v0.2 upgrade
+- "Suggest a stop" — opens a Google Form once configured; falls back to an email link otherwise
+- Data lives in a published Google Sheet, fetched as CSV on page load — no redeploy needed to add a stop
 
 ## Data
 
-Stops are currently hardcoded in `index.html` (see the `stops` array) rather than pulled from a backend. Each stop:
+Stops live in a Google Sheet (the `Stops` tab), published to the web as CSV and fetched by `index.html` on load. If the Sheet URL isn't configured yet, or the fetch fails, the site falls back to a small hardcoded seed array so it never shows up empty. Each stop:
 
 ```js
 {
@@ -30,16 +31,18 @@ Stops are currently hardcoded in `index.html` (see the `stops` array) rather tha
 }
 ```
 
-To add a stop: confirm the location on foot, then add an entry to the `stops` array with real coordinates and `status: 'verified'`.
+Submissions come in through a separate Google Form → a separate "Form Responses" tab, kept apart from `Stops` on purpose — nothing goes live until it's been walked and confirmed, then copied into `Stops` by hand with real coordinates.
+
+**See [SETUP.md](./SETUP.md)** for the full walkthrough on wiring up the Sheet and Form.
 
 ## Tech
 
-Single-file HTML app using [Leaflet](https://leafletjs.com/) and OpenStreetMap tiles. No build step, no backend — same approach as the pantry map.
+Single-file HTML app using [Leaflet](https://leafletjs.com/), OpenStreetMap tiles, and [PapaParse](https://www.papaparse.com/) for CSV parsing. No build step, no backend — same approach as the pantry map, just with a Sheet standing in for a database.
 
 ## Roadmap
 
-- [ ] Swap hardcoded `stops` array for a published Google Sheet → JSON feed
-- [ ] Wire up a real "suggest a stop" form
+- [x] Swap hardcoded `stops` array for a published Google Sheet → JSON feed
+- [x] Wire up a real "suggest a stop" form
 - [ ] Explore commercial layer: sponsored/featured pins for local pet stores, "adopt a stop" restocking partnerships
 
 ## About

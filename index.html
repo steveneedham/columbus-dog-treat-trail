@@ -160,19 +160,38 @@
 <div class="modal-backdrop" id="modal">
   <div class="modal">
     <h2>Suggest a stop</h2>
-    <p>This is a seed build with one location — there's no live submission form yet. For now, email the spot (address or cross-streets + what you saw) and it'll get added to the data file directly.</p>
-    <a class="btn primary" href="mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20New%20Stop&body=Location%20(address%20or%20cross-streets)%3A%0AType%20(treat%20stand%20%2F%20stick%20library%20%2F%20water%20bowl%20%2F%20toy%20box)%3A%0ANotes%3A%0A">Email a stop →</a>
+    <p id="modal-copy">Seen a treat stand, stick library, water bowl, or toy box on a walk? Tell us where — we'll verify it on foot before it goes live.</p>
+    <a class="btn primary" id="modal-cta" href="#" target="_blank" rel="noopener">Open the form →</a>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
   /* =========================================================
-     DATA
+     CONFIG
      -----------------------------------------------------------
-     This is the same shape described in the spec — swap this
-     array for a fetch() to a published Google Sheet JSON once
-     the submission form is wired up. Each stop:
+     1. SHEET_CSV_URL: publish the "Stops" tab of the data sheet
+        to the web as CSV (File > Share > Publish to web > pick
+        the Stops tab > CSV) and paste that URL here.
+     2. FORM_URL: the shareable link for the "Suggest a stop"
+        Google Form (Send > link icon). Its responses should
+        land in a separate "Submissions" tab in the same sheet —
+        NOT the Stops tab — so nothing goes live unverified.
+     Leave either blank to fall back to local seed data / the
+     old disabled-form message, so the site still works before
+     these are wired up. See SETUP.md for the full walkthrough.
+     ========================================================= */
+  const CONFIG = {
+    SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRConYdz281L3B8jXoR6ocsHiHzox0rLsPauOPp3uTj9OWjNj2l1lHhGBp4X3Zo56LK0UaoXd4R5ulB/pub?output=csv",
+    FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSduyp92-tJt_xq7tdGpfLV-ERWM8hwAXQV95OAqqAdJn3SPNQ/viewform"
+  };
+
+  /* =========================================================
+     DATA — fallback seed
+     -----------------------------------------------------------
+     Used only if SHEET_CSV_URL is blank or the fetch fails, so
+     the map never shows up empty. Shape:
 
      {
        id, name, lat, lng,
@@ -181,20 +200,56 @@
        notes, submitted_by, date_added
      }
      ========================================================= */
-  const stops = [
+  const SEED_STOPS = [
     {
       id: 1,
-      name: "Mutts & Co.",
-      lat: 39.9446252,
-      lng: -82.9871988,
+      name: "German Village biscuit stash (unconfirmed spot)",
+      lat: 39.9469,
+      lng: -82.9934,
       type: "treat_stand",
       neighborhood: "German Village",
-      status: "verified",
-      notes: "Pet store at 364 E Whittier St — self-serve dog wash, treats, toys, and food. First confirmed stop on the trail.",
+      status: "unverified",
+      notes: "Spotted on a dog-walking route — exact address still needs confirming on foot. Update coordinates once located.",
       submitted_by: "Steven",
       date_added: "2026-07-16"
     }
   ];
+
+  let stops = SEED_STOPS;
+
+  // Parses the published CSV into the same shape as SEED_STOPS,
+  // coercing lat/lng to numbers and dropping malformed rows.
+  function csvToStops(csvText) {
+    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+    return parsed.data
+      .map(row => ({
+        id: row.id,
+        name: (row.name || "").trim(),
+        lat: parseFloat(row.lat),
+        lng: parseFloat(row.lng),
+        type: (row.type || "").trim(),
+        neighborhood: (row.neighborhood || "").trim(),
+        status: (row.status || "unverified").trim(),
+        notes: row.notes || "",
+        submitted_by: row.submitted_by || "",
+        date_added: row.date_added || ""
+      }))
+      .filter(s => s.name && Number.isFinite(s.lat) && Number.isFinite(s.lng) && TYPE_META_KEYS.includes(s.type));
+  }
+
+  async function loadStops() {
+    if (!CONFIG.SHEET_CSV_URL) return SEED_STOPS;
+    try {
+      const res = await fetch(CONFIG.SHEET_CSV_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
+      const text = await res.text();
+      const parsedStops = csvToStops(text);
+      return parsedStops.length ? parsedStops : SEED_STOPS;
+    } catch (err) {
+      console.warn("Falling back to seed data — couldn't load the Sheet:", err);
+      return SEED_STOPS;
+    }
+  }
 
   const TYPE_META = {
     treat_stand:   { label: "Treat stand",   color: "#B5502C" },
@@ -203,8 +258,9 @@
     toy_box:       { label: "Toy box",        color: "#8A5FB0" },
     mixed:         { label: "Mixed",          color: "#C68A2E" }
   };
+  const TYPE_META_KEYS = Object.keys(TYPE_META);
 
-  const map = L.map('map', { zoomControl: false }).setView([39.9446252, -82.9871988], 16);
+  const map = L.map('map', { zoomControl: false }).setView([39.9469, -82.9934], 15);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -262,10 +318,11 @@
               stop.status = "verified";
               marker.setIcon(makeIcon(stop.type, stop.status));
               marker.setPopupContent(popupHTML(stop));
-              // Note: this is in-memory only for this session.
-              // Once verified on foot, update the `stops` array
-              // in this file directly (or the data source once
-              // the Sheet is wired up) to persist it.
+              // Note: this is in-memory only for this session, just
+              // a quick visual preview. To persist it, update the
+              // matching row's `status` to "verified" (and correct
+              // lat/lng if needed) in the Stops sheet — the next
+              // page load will pick it up from there.
             });
           }
         });
@@ -292,7 +349,22 @@
     filtersEl.appendChild(chip);
   });
 
-  render();
+  loadStops().then(loaded => {
+    stops = loaded;
+    render();
+  });
+
+  // Suggest-a-stop modal content: point at the real Form once
+  // configured, otherwise show the original "not set up yet" copy.
+  const modalCopy = document.getElementById('modal-copy');
+  const modalCta = document.getElementById('modal-cta');
+  if (CONFIG.FORM_URL) {
+    modalCta.href = CONFIG.FORM_URL;
+  } else {
+    modalCopy.textContent = "This is a seed build — the submission form isn't wired up yet. For now, email the spot (address or cross-streets + what you saw) and it'll get added to the sheet directly.";
+    modalCta.href = "mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20New%20Stop&body=Location%20(address%20or%20cross-streets)%3A%0AType%20(treat%20stand%20%2F%20stick%20library%20%2F%20water%20bowl%20%2F%20toy%20box)%3A%0ANotes%3A%0A";
+    modalCta.textContent = "Email a stop →";
+  }
 
   // Near me
   document.getElementById('locate-btn').addEventListener('click', () => {
