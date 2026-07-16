@@ -1,4 +1,6 @@
 /**
+ * Copyright (c) 2026 Steven Needham — MIT License (see repo LICENSE)
+ *
  * Columbus Dog Treat Trail — approval automation (geocoding version)
  * ---------------------------------------------------------------
  * Bound to the "Columbus Dog Treat Trail — Data" spreadsheet.

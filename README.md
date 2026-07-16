@@ -32,7 +32,7 @@ Stops live in a Google Sheet (the `Stops` tab), published to the web as CSV and 
 }
 ```
 
-Submissions come in through a separate Google Form → a separate "Form Responses" tab, kept apart from `Stops` on purpose — nothing goes live until it's been walked and confirmed, then copied into `Stops` by hand with real coordinates.
+Submissions come in through a separate Google Form → a separate "Form Responses" tab, kept apart from `Stops` on purpose. Approving a response geocodes it and appends it to `Stops` automatically (see `apps-script/approval.gs`), always as `unverified` — flipping something to `verified` still means walking it and hand-correcting the coordinates.
 
 **See [SETUP.md](./SETUP.md)** for the full walkthrough on wiring up the Sheet and Form.
 
@@ -49,3 +49,14 @@ Single-file HTML app using [Leaflet](https://leafletjs.com/), OpenStreetMap tile
 ## About
 
 Corrections and new spottings welcome via issues/PRs once this is live.
+
+## License
+
+Code is [MIT licensed](./LICENSE) — © 2026 Steven Needham.
+
+Third-party pieces keep their own terms:
+- [Leaflet](https://leafletjs.com/) — BSD-2-Clause
+- [OpenStreetMap](https://www.openstreetmap.org/copyright) tile data — © OpenStreetMap contributors, ODbL (attribution already shown on the map itself, per their terms)
+- [PapaParse](https://www.papaparse.com/) — MIT
+
+Stop data itself (the contents of the `Stops` sheet) isn't code and isn't covered by the MIT license above — treat it as community-contributed and don't scrape/republish it commercially without asking.
