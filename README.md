@@ -2,7 +2,7 @@
 
 An interactive map of little dog treat stands, stick libraries, water bowls, and toy boxes spotted on walks around Columbus. Started after noticing a cluster of biscuit stashes in German Village while dog walking — built as a companion to [Columbus PantryMap](https://github.com/steveneedham/columbus-pantry-map), but leaning more "fun neighborhood find" than mutual aid.
 
-**Live map:** _(add your GitHub Pages link here after first push, e.g. `https://steveneedham.github.io/columbus-dog-treat-trail/`)_
+**Live map:** https://steveneedham.github.io/columbus-dog-treat-trail/
 
 ## Status
 
