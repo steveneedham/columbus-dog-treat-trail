@@ -11,6 +11,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Columbus Dog Treat Trail</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjQjU1MDJDIi8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTAsNTgpIHNjYWxlKDAuNDIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9IjMwIiByeD0iMjciIHJ5PSIyMSIgZmlsbD0iI0Y3RjRFQyIvPjxlbGxpcHNlIGN4PSItMjciIGN5PSItMiIgcng9IjEyIiByeT0iMTUuNSIgZmlsbD0iI0Y3RjRFQyIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIC0yNyAtMikiLz48ZWxsaXBzZSBjeD0iLTkiIGN5PSItMTkiIHJ4PSIxMiIgcnk9IjE2IiBmaWxsPSIjRjdGNEVDIiB0cmFuc2Zvcm09InJvdGF0ZSgtOCAtOSAtMTkpIi8+PGVsbGlwc2UgY3g9IjEyIiBjeT0iLTE5IiByeD0iMTIiIHJ5PSIxNiIgZmlsbD0iI0Y3RjRFQyIgdHJhbnNmb3JtPSJyb3RhdGUoOCAxMiAtMTkpIi8+PGVsbGlwc2UgY3g9IjMwIiBjeT0iLTIiIHJ4PSIxMiIgcnk9IjE1LjUiIGZpbGw9IiNGN0Y0RUMiIHRyYW5zZm9ybT0icm90YXRlKDIyIDMwIC0yKSIvPjwvZz48L3N2Zz4K">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -42,12 +43,8 @@
     pointer-events:none;
   }
   .topbar > *{ pointer-events:auto; }
-  .brand{ display:flex; align-items:baseline; gap:10px; }
-  .brand h1{
-    font-family:'Fraunces', serif; font-weight:700; font-size:22px; margin:0;
-    letter-spacing:-0.01em;
-  }
-  .brand .paw{ font-size:20px; transform: rotate(-8deg); display:inline-block; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .lockup{ height:38px; width:auto; display:block; }
   .brand .subtitle{
     font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--ink-soft);
     text-transform:uppercase; letter-spacing:0.08em;
@@ -154,9 +151,26 @@
 
 <div class="topbar">
   <div class="brand">
-    <span class="paw">🐾</span>
+    <svg class="lockup" viewBox="0 0 340 76" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(0,0) scale(0.34)">
+        <circle cx="110" cy="110" r="104" fill="#EDE6D6" stroke="#2B2A26" stroke-width="6"/>
+        <path d="M 30 150 C 70 175, 110 175, 130 140 S 190 90, 185 65" fill="none" stroke="#4C6B4F" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 14"/>
+        <g transform="translate(178,50)">
+          <line x1="0" y1="0" x2="0" y2="22" stroke="#2B2A26" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 0 0 L 16 5 L 0 11 Z" fill="#C68A2E"/>
+        </g>
+        <g transform="translate(88,92) rotate(-6)">
+          <ellipse cx="0" cy="30" rx="27" ry="21" fill="#B5502C" stroke="#2B2A26" stroke-width="2"/>
+          <ellipse cx="-27" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-22 -27 -2)"/>
+          <ellipse cx="-9" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-8 -9 -19)"/>
+          <ellipse cx="12" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(8 12 -19)"/>
+          <ellipse cx="30" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(22 30 -2)"/>
+        </g>
+      </g>
+      <text x="86" y="34" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" letter-spacing="1.6" fill="#5B5648">COLUMBUS</text>
+      <text x="86" y="60" font-family="'Fraunces', serif" font-size="26" font-weight="700" fill="#2B2A26">DOG TREAT TRAIL</text>
+    </svg>
     <div>
-      <h1>Columbus Dog Treat Trail</h1>
       <div class="subtitle">Stashes spotted on foot — v0.5</div>
     </div>
   </div>
