@@ -1,0 +1,15 @@
+<svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+<circle cx="110" cy="110" r="104" fill="#EDE6D6" stroke="#2B2A26" stroke-width="6"></circle>
+<path d="M 30 150 C 70 175, 110 175, 130 140 S 190 90, 185 65" fill="none" stroke="#4C6B4F" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 14"></path>
+<g transform="translate(178,50)">
+<line x1="0" y1="0" x2="0" y2="22" stroke="#2B2A26" stroke-width="3" stroke-linecap="round"></line>
+<path d="M 0 0 L 16 5 L 0 11 Z" fill="#C68A2E"></path>
+</g>
+<g transform="translate(88,92) rotate(-6)">
+<ellipse cx="0" cy="30" rx="27" ry="21" fill="#B5502C" stroke="#2B2A26" stroke-width="2"></ellipse>
+<ellipse cx="-27" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-22 -27 -2)"></ellipse>
+<ellipse cx="-9" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-8 -9 -19)"></ellipse>
+<ellipse cx="12" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(8 12 -19)"></ellipse>
+<ellipse cx="30" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(22 30 -2)"></ellipse>
+</g>
+</svg>

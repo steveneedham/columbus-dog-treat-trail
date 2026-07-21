@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --font-display:'Fraunces',serif;         /* stop names, headings, modal titles — warm, editorial serif */
+  --font-body:'Inter',sans-serif;          /* buttons, body copy, chip labels */
+  --font-mono:'JetBrains Mono',monospace;  /* eyebrow labels, meta, badges, legend — field-notebook feel */
+
+  --text-display-lg:26px;   /* logo wordmark / big headings */
+  --text-display-md:19px;   /* modal h2 */
+  --text-display-sm:16px;   /* popup stop name */
+  --text-body:13px;         /* buttons, chip labels */
+  --text-body-sm:12.5px;    /* popup notes */
+  --text-mono-label:11px;   /* subtitle/eyebrow */
+  --text-mono-meta:10.5px;  /* popup meta, legend */
+  --text-mono-badge:9.5px;  /* status badges */
+
+  --leading-tight:1.2;
+  --leading-normal:1.5;
+  --leading-loose:1.6;
+
+  --tracking-wide:0.08em;   /* uppercase mono labels */
+  --tracking-mid:0.04em;    /* badges */
+}

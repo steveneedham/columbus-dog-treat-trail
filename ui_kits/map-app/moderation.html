@@ -1,0 +1,63 @@
+<!-- @dsCard group="Map App" viewport="1280x760" name="Moderation Queue" subtitle="Intentional addition — admin view of pending submissions, matching the source repo's approval.gs/verify.gs Sheet workflow" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Moderation — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Brand, Panel, Button, Badge, Toast } = window.ColumbusDogTreatTrailDesignSystem_791ae7;
+
+const INITIAL = [
+  { id: 1, name: 'Reeb Ave corner stash', type: 'Treat stand', neighborhood: 'South Side', submitter: 'anonymous form', notes: 'Bowl of biscuits on a porch rail, saw it twice this week.', date: 'Jul 18' },
+  { id: 2, name: 'Steelton Village report', type: 'Mixed', neighborhood: 'Steelton Village', submitter: 'anonymous form', notes: 'Sticks and a water bowl together outside a garage.', date: 'Jul 19' },
+  { id: 3, name: 'Merion Village tip', type: 'Water bowl', neighborhood: 'Merion Village', submitter: 'anonymous form', notes: 'Metal bowl by a front gate, refilled often.', date: 'Jul 20' }
+];
+
+function Queue() {
+  const [items, setItems] = React.useState(INITIAL);
+  const [toast, setToast] = React.useState(null);
+  function resolve(id, action) {
+    setItems(items.filter(i => i.id !== id));
+    setToast(action === 'approve' ? 'Stop approved — now live as unverified' : 'Submission dismissed');
+    setTimeout(() => setToast(null), 2400);
+  }
+  return (
+    <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 24px 40px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Brand subtitle="Moderation queue" logoSrc="../../assets/logo-lockup.svg" />
+        <Badge status="unverified" label={`${items.length} pending`} />
+      </div>
+      {items.length === 0 ? (
+        <Panel><div style={{ fontSize: 13, color: 'var(--ink-soft)', textAlign: 'center', padding: 20 }}>All caught up — no pending submissions.</div></Panel>
+      ) : items.map(item => (
+        <Panel key={item.id}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 16 }}>{item.name}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--ink-soft)', margin: '4px 0 8px' }}>{item.type} · {item.neighborhood} · submitted {item.date} via {item.submitter}</div>
+              <div style={{ fontSize: 12.5, lineHeight: 1.5 }}>{item.notes}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <Button variant="primary" onClick={() => resolve(item.id, 'approve')}>Approve → unverified</Button>
+            <Button onClick={() => resolve(item.id, 'dismiss')}>Dismiss</Button>
+          </div>
+        </Panel>
+      ))}
+      <Toast open={!!toast} kind="success" message={toast || ''} />
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Queue />);
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+:root{
+  /* base palette — extracted 1:1 from the live site's :root */
+  --paper:#EDE6D6;
+  --paper-dark:#E2D9C4;
+  --ink:#2B2A26;
+  --ink-soft:#5B5648;
+  --rust:#B5502C;
+  --rust-dark:#96401F;
+  --moss:#4C6B4F;
+  --moss-dark:#3B5540;
+  --amber:#C68A2E;
+  --line:#C9BFA5;
+  --white:#FBF9F3;
+  /* stop-type colors, from TYPE_META in index.html */
+  --water:#3E6E8E;
+  --purple:#8A5FB0;
+
+  /* semantic aliases */
+  --surface-app:var(--paper);
+  --surface-card:var(--white);
+  --surface-chip:var(--paper);
+  --border-default:var(--ink);
+  --border-subtle:var(--line);
+  --text-primary:var(--ink);
+  --text-secondary:var(--ink-soft);
+  --text-on-dark:var(--white);
+
+  --accent-primary:var(--rust);
+  --accent-primary-hover:var(--rust-dark);
+  --status-verified:var(--moss);
+  --status-verified-hover:var(--moss-dark);
+  --status-unverified:var(--amber);
+
+  /* per-stop-type marker colors */
+  --type-treat-stand:var(--rust);
+  --type-stick-library:var(--moss);
+  --type-water-bowl:var(--water);
+  --type-toy-box:var(--purple);
+  --type-mixed:var(--amber);
+}

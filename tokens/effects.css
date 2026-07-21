@@ -1,0 +1,12 @@
+:root{
+  /* hard offset shadows — no blur, no softness. this is the brand's signature depth cue,
+     standing in for the "carved sign" / paper-craft feel instead of soft drop shadows. */
+  --shadow-sm:2px 2px 0 rgba(43,42,38,0.15);
+  --shadow-md:3px 3px 0 rgba(43,42,38,0.18);
+  --shadow-lg:5px 5px 0 rgba(43,42,38,0.2);
+
+  --ease-standard:ease; /* @kind other */
+  --duration-fast:0.12s; /* @kind other */
+
+  --backdrop-scrim:rgba(43,42,38,0.45);
+}

@@ -1,0 +1,110 @@
+<!-- @dsCard group="Map App" viewport="1280x760" name="Suggested Walks & Explore Mode" subtitle="Intentional addition — 'Suggest a walk' finds a treat-dense start/end route; 'Explore' surfaces unverified/sparse stops needing a visit" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Routes — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;font-family:var(--font-body);color:var(--ink);background:var(--paper)}
+#map{position:absolute;inset:0;filter:saturate(0.9) sepia(8%) brightness(1.02)}
+.topbar{position:absolute;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,rgba(237,230,214,0.97) 0%,rgba(237,230,214,0.88) 80%,rgba(237,230,214,0) 100%);pointer-events:none}
+.topbar > *{pointer-events:auto}
+.mode-panel{position:absolute;top:72px;left:20px;z-index:1000;width:270px}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="topbar-root"></div>
+<div id="mode-root" class="mode-panel"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Button, Panel, Brand } = window.ColumbusDogTreatTrailDesignSystem_791ae7;
+
+const STOPS = [
+  { id: 1, name: 'Mutts & Co.', lat: 39.9446, lng: -82.9872, type: 'treat_stand', status: 'verified' },
+  { id: 2, name: 'German Village biscuit stash', lat: 39.9469, lng: -82.9934, type: 'treat_stand', status: 'verified' },
+  { id: 3, name: 'Schiller Park stick pile', lat: 39.9439, lng: -82.9958, type: 'stick_library', status: 'verified' },
+  { id: 4, name: "Fido's water bowl @ Book Loft", lat: 39.9458, lng: -82.9979, type: 'water_bowl', status: 'verified' },
+  { id: 5, name: 'Whittier St toy box', lat: 39.9451, lng: -82.9891, type: 'toy_box', status: 'verified' },
+  { id: 6, name: 'Reeb Ave corner stash (unconfirmed)', lat: 39.9398, lng: -82.9861, type: 'treat_stand', status: 'unverified' },
+  { id: 7, name: 'Steelton Village report', lat: 39.9612, lng: -82.9755, type: 'mixed', status: 'unverified' },
+  { id: 8, name: 'Merion Village tip', lat: 39.9382, lng: -82.9911, type: 'water_bowl', status: 'unverified' }
+];
+const HEX = { treat_stand: '#B5502C', stick_library: '#4C6B4F', water_bowl: '#3E6E8E', toy_box: '#8A5FB0', mixed: '#C68A2E' };
+
+const map = L.map('map', { zoomControl: false }).setView([39.947, -82.99], 14);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(map);
+
+let markers = [], routeLine = null, ringMarkers = [];
+function clearLayers() {
+  markers.forEach(m => map.removeLayer(m)); markers = [];
+  ringMarkers.forEach(m => map.removeLayer(m)); ringMarkers = [];
+  if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+}
+
+function makeDot(hex, opacity = 1, size = 20) {
+  return L.divIcon({ className: '', html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${hex};opacity:${opacity};border:2.5px solid #2B2A26;box-shadow:1px 1px 0 rgba(43,42,38,0.3)"></div>`, iconSize: [size, size], iconAnchor: [size/2, size/2] });
+}
+
+function renderWalkMode() {
+  clearLayers();
+  const verified = STOPS.filter(s => s.status === 'verified');
+  // order geographically (west→east loop) so the polyline doesn't self-intersect
+  const ordered = [verified[1], verified[2], verified[3], verified[4], verified[0]];
+  ordered.forEach(s => markers.push(L.marker([s.lat, s.lng], { icon: makeDot(HEX[s.type]) }).addTo(map).bindTooltip(s.name)));
+  const start = ordered[0], end = ordered[ordered.length - 1];
+  ringMarkers.push(L.marker([start.lat, start.lng], { icon: L.divIcon({ className: '', html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#4C6B4F;color:#FBF9F3;font-family:var(--font-mono);font-size:9px;font-weight:700;border:2px solid #2B2A26;box-shadow:1px 1px 0 rgba(43,42,38,0.3)">START</div>`, iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(map));
+  ringMarkers.push(L.marker([end.lat, end.lng], { icon: L.divIcon({ className: '', html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#B5502C;color:#FBF9F3;font-family:var(--font-mono);font-size:11px;font-weight:700;border:2px solid #2B2A26;box-shadow:1px 1px 0 rgba(43,42,38,0.3)">🏁</div>`, iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(map));
+  routeLine = L.polyline(ordered.map(s => [s.lat, s.lng]), { color: '#B5502C', weight: 3, dashArray: '2 8' }).addTo(map);
+  map.fitBounds(routeLine.getBounds(), { padding: [60, 60] });
+}
+
+function renderExploreMode() {
+  clearLayers();
+  STOPS.forEach(s => {
+    const isUnverified = s.status === 'unverified';
+    markers.push(L.marker([s.lat, s.lng], { icon: makeDot(HEX[s.type], isUnverified ? 1 : 0.28, isUnverified ? 24 : 14) }).addTo(map).bindTooltip(s.name));
+    if (isUnverified) ringMarkers.push(L.circleMarker([s.lat, s.lng], { radius: 20, color: '#C68A2E', weight: 2, dashArray: '3 5', fillOpacity: 0 }).addTo(map));
+  });
+  map.setView([39.947, -82.99], 13);
+}
+
+function ModePanel() {
+  const [mode, setMode] = React.useState('walk');
+  React.useEffect(() => { mode === 'walk' ? renderWalkMode() : renderExploreMode(); }, [mode]);
+  const unverifiedCount = STOPS.filter(s => s.status === 'unverified').length;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <Button variant={mode === 'walk' ? 'primary' : 'default'} onClick={() => setMode('walk')}>Suggest a walk</Button>
+        <Button variant={mode === 'explore' ? 'primary' : 'default'} onClick={() => setMode('explore')}>Explore</Button>
+      </div>
+      {mode === 'walk' ? (
+        <Panel label="Route">
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15 }}>German Village Treat Loop</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--ink-soft)' }}>0.9 mi · 4 verified stops · ~20 min walk</div>
+          <div style={{ fontSize: 12, color: 'var(--ink)', lineHeight: 1.5 }}>Starts at Schiller Park stick pile, ends at Mutts &amp; Co. — all stops confirmed on foot, no detours to unverified reports.</div>
+        </Panel>
+      ) : (
+        <Panel label="Needs a look">
+          <div style={{ fontSize: 12, color: 'var(--ink)', lineHeight: 1.5 }}>{unverifiedCount} unverified reports nearby — dashed amber rings mark stops that haven't been walked yet. Faded dots are already confirmed.</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--ink-soft)' }}>Pick one on your next walk and mark it verified.</div>
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('topbar-root')).render(<div className="topbar"><Brand subtitle="Plan your walk" logoSrc="../../assets/logo-lockup.svg" /></div>);
+ReactDOM.createRoot(document.getElementById('mode-root')).render(<ModePanel />);
+</script>
+</body>
+</html>

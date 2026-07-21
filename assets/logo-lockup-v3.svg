@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 90">
+<circle cx="45" cy="45" r="41" fill="#B5502C"></circle>
+<path d="M27 30c-7.5-3.7-11.2 3.7-9.3 13C19.7 50.5 27 52.2 32.5 47" fill="#EDE6D6" stroke="#2B2A26" stroke-width="3.7"></path>
+<path d="M63 30c7.5-3.7 11.2 3.7 9.3 13C70.3 50.5 63 52.2 57.5 47" fill="#EDE6D6" stroke="#2B2A26" stroke-width="3.7"></path>
+<ellipse cx="45" cy="50.5" rx="24.4" ry="22.5" fill="#EDE6D6" stroke="#2B2A26" stroke-width="3.7"></ellipse>
+<circle cx="34.9" cy="47" r="3.7" fill="#2B2A26"></circle>
+<circle cx="55.1" cy="47" r="3.7" fill="#2B2A26"></circle>
+<ellipse cx="45" cy="57.5" rx="6" ry="4.5" fill="#2B2A26"></ellipse>
+<path d="M45 62.5v3.7" stroke="#2B2A26" stroke-width="3.7" stroke-linecap="round"></path>
+<text x="102" y="42" font-family="&#39;Fraunces&#39;,serif" font-size="27" font-weight="700" fill="#2B2A26">Dog Treat Trail</text>
+<text x="102" y="63" font-family="&#39;JetBrains Mono&#39;,monospace" font-size="12" font-weight="700" letter-spacing="0.08em" fill="#5B5648">COLUMBUS</text>
+</svg>
