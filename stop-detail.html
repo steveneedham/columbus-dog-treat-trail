@@ -1,0 +1,100 @@
+<!--
+  Columbus Dog Treat Trail — Stop Detail
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stop — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .detail-name{font-family:var(--font-display);font-weight:700;font-size:24px;margin-bottom:6px;}
+  .detail-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+  .detail-venue{font-style:italic;font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .detail-notes{font-size:14px;line-height:1.6;margin-bottom:16px;}
+  .detail-photo{width:100%;max-height:280px;object-fit:cover;border-radius:var(--radius-lg);border:1px solid var(--line);margin-bottom:14px;display:block;}
+  .detail-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .icon-btn{width:36px;height:36px;padding:0;justify-content:center;}
+  .url-line{font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-topbar">
+    <div id="brand"></div>
+    <a class="btn small" href="index.html">← Back to map</a>
+  </div>
+  <div id="content" class="panel"><div class="empty-state">Loading…</div></div>
+  <div id="url-line" class="url-line"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("Shared stop");
+
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+    const content = document.getElementById("content");
+
+    if (!id) {
+      content.innerHTML = `<div class="empty-state">No stop specified. <a href="index.html">Go to the map</a> and open a pin's popup to get a shareable link.</div>`;
+      return;
+    }
+
+    let stops = [];
+    try {
+      stops = await CDTT.loadStops();
+    } catch (err) {
+      content.innerHTML = `<div class="empty-state">Couldn't load the trail data right now — try again in a bit.</div>`;
+      return;
+    }
+    const stop = stops.find(s => String(s.id) === String(id));
+    if (!stop) {
+      content.innerHTML = `<div class="empty-state">That stop isn't on the trail (anymore, or yet). <a href="index.html">Back to the map →</a></div>`;
+      return;
+    }
+
+    document.title = `${stop.name} — Columbus Dog Treat Trail`;
+    const meta = CDTT.TYPE_META[stop.type] || { label: stop.type };
+    const badgeHTML = CDTT.isVerified(stop.status)
+      ? '<span class="badge verified">Verified</span>'
+      : '<span class="badge unverified">Unverified</span>';
+    const seasonalHTML = CDTT.isSeasonal(stop.status) ? '<span class="badge seasonal">Seasonal</span>' : '';
+    const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}`;
+    const amaps = `https://maps.apple.com/?daddr=${stop.lat},${stop.lng}&dirflg=w`;
+    const shareUrl = `${location.origin}${location.pathname.replace(/[^/]*$/, "")}stop-detail.html?id=${encodeURIComponent(stop.id)}`;
+
+    content.outerHTML = `
+      <div class="panel" id="content">
+        <div class="detail-name">${CDTT.escapeHtml(stop.name)}${stop.sponsored ? " ★" : ""}</div>
+        <div class="detail-meta meta-line">
+          <span>${CDTT.escapeHtml(meta.label)} &middot; ${CDTT.escapeHtml(stop.neighborhood)}</span>
+          ${badgeHTML}${seasonalHTML}
+        </div>
+        ${stop.venue ? `<div class="detail-venue">${CDTT.escapeHtml(stop.venue)}</div>` : ""}
+        ${stop.photo_url ? `<img class="detail-photo" src="${CDTT.escapeHtml(stop.photo_url)}" alt="${CDTT.escapeHtml(stop.name)}" loading="lazy" onerror="this.remove()">` : ""}
+        <div class="detail-notes">${CDTT.escapeHtml(stop.notes || "")}</div>
+        <div class="detail-actions">
+          <a class="btn small" target="_blank" rel="noopener" href="${gmaps}">${CDTTSite.ICONS.directions} Google Maps</a>
+          <a class="btn small" target="_blank" rel="noopener" href="${amaps}">${CDTTSite.ICONS.directions} Apple Maps</a>
+          <button class="btn small icon-btn" id="share-btn" title="Share this stop">${CDTTSite.ICONS.share}</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("url-line").textContent = shareUrl;
+    document.getElementById("share-btn").addEventListener("click", () => {
+      CDTTSite.shareOrCopy({ title: stop.name, text: `${stop.name} — Columbus Dog Treat Trail`, url: shareUrl });
+    });
+  }
+  init();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!--
+  Columbus Dog Treat Trail — Printable Trail Flier
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trail Flier — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  body{background:var(--paper-dark);}
+  .sheet{
+    width:8.5in; min-height:11in; margin:24px auto; padding:56px 48px; background:var(--paper);
+    box-shadow:var(--shadow-lg); display:flex; flex-direction:column;
+  }
+  .flier-header{display:flex;align-items:center;gap:14px;margin-bottom:32px;}
+  .flier-eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:0.08em;color:var(--ink-soft);text-transform:uppercase;}
+  .flier-word{font-family:var(--font-display);font-weight:700;font-size:26px;}
+  .flier-title{font-family:var(--font-display);font-weight:700;font-size:34px;margin-bottom:8px;}
+  .flier-sub{font-family:var(--font-mono);font-size:13px;color:var(--ink-soft);margin-bottom:24px;}
+  .flier-list{border:2px solid var(--ink);border-radius:var(--radius-lg);padding:24px;background:var(--white);box-shadow:var(--shadow-md);margin-bottom:24px;}
+  .flier-stop{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;}
+  .flier-stop:last-child{margin-bottom:0;}
+  .flier-num{width:28px;height:28px;border-radius:50%;color:var(--white);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;font-weight:700;flex-shrink:0;}
+  .flier-stop-name{font-weight:600;font-size:15px;}
+  .flier-stop-notes{font-size:12px;color:var(--ink-soft);}
+  .flier-footer{margin-top:auto;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);text-align:center;padding-top:16px;border-top:1px solid var(--line);}
+  .print-controls{max-width:8.5in;margin:0 auto 12px;display:flex;justify-content:space-between;}
+  @media print {
+    body{background:var(--paper);}
+    .print-controls{display:none;}
+    .sheet{box-shadow:none;margin:0;width:auto;min-height:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="print-controls">
+  <a class="btn small" href="index.html">← Back to map</a>
+  <button class="btn small primary" onclick="window.print()">Print this flier</button>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="empty-state">Loading route…</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  async function init() {
+    const sheet = document.getElementById("sheet");
+    let stops = [];
+    try {
+      stops = await CDTT.loadStops();
+    } catch (err) {
+      sheet.innerHTML = `<div class="empty-state">Couldn't load the trail data right now.</div>`;
+      return;
+    }
+
+    // Pick whichever neighborhood has the most verified stops to build
+    // the flier's route around — a real, current loop rather than a
+    // hardcoded one that drifts out of date as the sheet changes.
+    const byHood = new Map();
+    stops.filter(s => CDTT.isVerified(s.status)).forEach(s => {
+      if (!byHood.has(s.neighborhood)) byHood.set(s.neighborhood, []);
+      byHood.get(s.neighborhood).push(s);
+    });
+    const best = [...byHood.entries()].sort((a, b) => b[1].length - a[1].length)[0];
+
+    if (!best || best[1].length < 2) {
+      sheet.innerHTML = `<div class="empty-state">Not enough verified stops yet in any one neighborhood to build a printable loop — check back once a few more are confirmed on foot.</div>`;
+      return;
+    }
+
+    const [hoodName, hoodStops] = best;
+    const ordered = CDTT.greedyRoute(hoodStops);
+    const miles = CDTT.routeDistanceMiles(ordered);
+    const minutes = Math.round((miles / 3) * 60);
+    const numColors = ["#4C6B4F", "#3E6E8E", "#8A5FB0", "#B5502C", "#C68A2E"];
+
+    sheet.innerHTML = `
+      <div class="flier-header">
+        <svg width="56" height="56" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="110" cy="110" r="104" fill="#EDE6D6" stroke="#2B2A26" stroke-width="6"/>
+          <g transform="translate(88,92) rotate(-6)">
+            <ellipse cx="0" cy="30" rx="27" ry="21" fill="#B5502C" stroke="#2B2A26" stroke-width="2"/>
+            <ellipse cx="-27" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-22 -27 -2)"/>
+            <ellipse cx="-9" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-8 -9 -19)"/>
+            <ellipse cx="12" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(8 12 -19)"/>
+            <ellipse cx="30" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(22 30 -2)"/>
+          </g>
+        </svg>
+        <div>
+          <div class="flier-eyebrow">Columbus</div>
+          <div class="flier-word">Dog Treat Trail</div>
+        </div>
+      </div>
+      <div class="flier-title">${CDTT.escapeHtml(hoodName)} Treat Loop</div>
+      <div class="flier-sub">${miles.toFixed(1)} mi &middot; ${ordered.length} verified stops &middot; ~${minutes} min walk</div>
+      <div class="flier-list">
+        ${ordered.map((s, i) => `
+          <div class="flier-stop">
+            <div class="flier-num" style="background:${numColors[i % numColors.length]}">${i + 1}</div>
+            <div>
+              <div class="flier-stop-name">${CDTT.escapeHtml(s.name)}</div>
+              <div class="flier-stop-notes">${CDTT.escapeHtml(s.notes || "")}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="flier-footer">Found a new stash? Suggest it at the map — columbusdogtreattrail.com</div>
+    `;
+  }
+  init();
+</script>
+
+</body>
+</html>

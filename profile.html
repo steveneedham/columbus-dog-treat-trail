@@ -1,0 +1,210 @@
+<!--
+  Columbus Dog Treat Trail — Profile & Leaderboard
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .avatar{width:64px;height:64px;border-radius:50%;flex-shrink:0;}
+  .avatar.locked{filter:grayscale(1) opacity(0.55);}
+  .avatar.tier2{box-shadow:0 0 0 3px var(--moss);}
+  .avatar.tier3{box-shadow:0 0 0 3px var(--amber);}
+  .avatar-sm{width:30px;height:30px;border-radius:50%;flex-shrink:0;}
+  .me-card{display:flex;gap:16px;align-items:center;}
+  .me-title{font-family:var(--font-display);font-weight:600;font-size:18px;}
+  .progress-track{margin-top:8px;height:8px;border-radius:4px;background:var(--paper-dark);border:1px solid var(--line);overflow:hidden;}
+  .progress-fill{height:100%;background:var(--rust);}
+  .badges-row{display:flex;gap:20px;flex-wrap:wrap;}
+  .badge-item{display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9.5px;text-align:center;color:var(--ink-soft);}
+  .badge-item img{width:28px;height:28px;}
+  .lb-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--paper-dark);}
+  .lb-row:last-child{border-bottom:none;}
+  .lb-row.me{background:var(--paper);border-radius:3px;}
+  .lb-rank{font-family:var(--font-mono);font-size:12px;width:18px;color:var(--ink-soft);}
+  .lb-name{flex:1;font-weight:500;}
+  .lb-count{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);}
+  .who-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  select{font-family:var(--font-body);font-size:13px;padding:7px 10px;border-radius:var(--radius-md);border:1.5px solid var(--ink);background:var(--white);}
+</style>
+</head>
+<body>
+
+<div class="page page-wide">
+  <div class="page-topbar">
+    <div id="brand"></div>
+    <a class="btn small" href="index.html">← Back to map</a>
+  </div>
+
+  <div class="panel who-row">
+    <span class="meta-line">Which contributor are you?</span>
+    <select id="who-select"><option value="">— pick your name —</option></select>
+  </div>
+
+  <div id="me-panel"></div>
+  <div id="badges-panel"></div>
+  <div id="leaderboard-panel" class="panel"><div class="empty-state">Loading contributors…</div></div>
+
+  <div class="footer-note">Levels are earned by verified stops only — suggesting one doesn't count until someone's walked it. See README for the tier thresholds.</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("Contributor profile");
+
+  function avatarSlugFor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    return String((hash % 10) + 1).padStart(2, "0");
+  }
+
+  function tierFor(verifiedCount) {
+    if (verifiedCount >= 10) return 3;
+    if (verifiedCount >= 3) return 2;
+    if (verifiedCount >= 1) return 1;
+    return 0;
+  }
+
+  function avatarSrcFor(slug, tier) {
+    if (slug === "04") {
+      if (tier === 0) return "assets/icons/avatars/avatar-04-locked.svg";
+      if (tier === 2) return "assets/icons/avatars/avatar-04-tier2-collar.svg";
+      if (tier === 3) return "assets/icons/avatars/avatar-04-tier3-crown.svg";
+      return "assets/icons/avatars/avatar-04.svg";
+    }
+    return `assets/icons/avatars/avatar-${slug}.svg`;
+  }
+
+  function tierClass(tier) {
+    if (tier === 0) return "locked";
+    if (tier === 2) return "tier2";
+    if (tier === 3) return "tier3";
+    return "";
+  }
+
+  function tierLabel(tier) {
+    return ["Newcomer", "Level 1", "Level 2 — collar", "Level 3 — crown"][tier];
+  }
+
+  function nextTierCopy(verifiedCount, tier) {
+    if (tier === 3) return "Top tier reached — thanks for keeping the trail honest.";
+    const next = tier === 0 ? 1 : tier === 1 ? 3 : 10;
+    const remaining = next - verifiedCount;
+    return `${remaining} more verified stop${remaining !== 1 ? "s" : ""} to ${tier === 1 ? "earn your collar" : tier === 0 ? "unlock your avatar" : "earn your crown"}.`;
+  }
+
+  async function init() {
+    let stops = [];
+    try {
+      stops = await CDTT.loadStops();
+    } catch (err) {
+      document.getElementById("leaderboard-panel").innerHTML = `<div class="empty-state">Couldn't load contributor data right now.</div>`;
+      return;
+    }
+
+    const bySubmitter = new Map();
+    stops.forEach(s => {
+      const name = (s.submitted_by || "").trim();
+      if (!name) return;
+      if (!bySubmitter.has(name)) bySubmitter.set(name, { name, total: 0, verified: 0, hoods: new Set() });
+      const rec = bySubmitter.get(name);
+      rec.total++;
+      if (CDTT.isVerified(s.status)) { rec.verified++; rec.hoods.add(s.neighborhood); }
+    });
+
+    const contributors = [...bySubmitter.values()].map(c => ({
+      ...c,
+      tier: tierFor(c.verified),
+      avatarSlug: avatarSlugFor(c.name)
+    })).sort((a, b) => b.verified - a.verified || b.total - a.total || a.name.localeCompare(b.name));
+
+    if (!contributors.length) {
+      document.getElementById("leaderboard-panel").innerHTML = `<div class="empty-state">No contributors on the board yet — be the first to suggest or verify a stop.</div>`;
+      return;
+    }
+
+    // "Who am I" picker
+    const select = document.getElementById("who-select");
+    contributors.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      opt.textContent = c.name;
+      select.appendChild(opt);
+    });
+    const params = new URLSearchParams(location.search);
+    let savedName = params.get("name") || (() => { try { return localStorage.getItem("cdtt_profile_name"); } catch (e) { return null; } })();
+    if (savedName && contributors.some(c => c.name === savedName)) select.value = savedName;
+
+    function renderMe() {
+      const name = select.value;
+      const me = contributors.find(c => c.name === name);
+      const mePanel = document.getElementById("me-panel");
+      const badgesPanel = document.getElementById("badges-panel");
+      if (!me) { mePanel.innerHTML = ""; badgesPanel.innerHTML = ""; return; }
+      const nextThreshold = me.tier === 3 ? me.verified : (me.tier === 0 ? 1 : me.tier === 1 ? 3 : 10);
+      const prevThreshold = me.tier === 0 ? 0 : me.tier === 1 ? 1 : me.tier === 2 ? 3 : 10;
+      const pct = me.tier === 3 ? 100 : Math.min(100, Math.round(((me.verified - prevThreshold) / (nextThreshold - prevThreshold)) * 100));
+      mePanel.innerHTML = `
+        <div class="panel me-card">
+          <img class="avatar ${tierClass(me.tier)}" src="${avatarSrcFor(me.avatarSlug, me.tier)}">
+          <div style="flex:1;">
+            <div class="me-title">${CDTT.escapeHtml(me.name)} — ${tierLabel(me.tier)}</div>
+            <div class="meta-line" style="margin-top:2px;">${me.verified} verified stop${me.verified !== 1 ? "s" : ""} &middot; ${me.total} submitted total</div>
+            <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div class="meta-line" style="margin-top:6px;">${nextTierCopy(me.verified, me.tier)}</div>
+          </div>
+        </div>
+      `;
+      const badgeDefs = [
+        { earned: me.verified >= 1, icon: "assets/icons/badges/badge-first-stop.svg", label: "First stop" },
+        { earned: me.hoods.size >= 3, icon: "assets/icons/badges/badge-explorer.svg", label: "Explorer" },
+        { earned: me.verified >= 10, icon: "assets/icons/badges/badge-milestone-star.svg", label: "Milestone" }
+      ].filter(b => b.earned);
+      badgesPanel.innerHTML = badgeDefs.length ? `
+        <div class="panel">
+          <div class="panel-label">Badges earned</div>
+          <div class="badges-row">
+            ${badgeDefs.map(b => `<div class="badge-item"><img src="${b.icon}">${b.label}</div>`).join("")}
+          </div>
+        </div>
+      ` : "";
+    }
+
+    select.addEventListener("change", () => {
+      try { localStorage.setItem("cdtt_profile_name", select.value); } catch (e) { /* ignore */ }
+      renderMe();
+      renderLeaderboard();
+    });
+
+    function renderLeaderboard() {
+      const meName = select.value;
+      document.getElementById("leaderboard-panel").outerHTML = `
+        <div class="panel" id="leaderboard-panel">
+          <div class="panel-label">Leaderboard — verified stops</div>
+          ${contributors.map((c, i) => `
+            <div class="lb-row ${c.name === meName ? "me" : ""}">
+              <span class="lb-rank">${i + 1}</span>
+              <img class="avatar-sm ${tierClass(c.tier)}" src="${avatarSrcFor(c.avatarSlug, c.tier)}">
+              <span class="lb-name" style="font-weight:${c.name === meName ? 700 : 500}">${CDTT.escapeHtml(c.name)}</span>
+              <span class="lb-count">${c.verified} verified</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    renderMe();
+    renderLeaderboard();
+  }
+  init();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!--
+  Columbus Dog Treat Trail — Suggested Walks & Explore Mode
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Routes — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+  html,body{height:100%;}
+  #map{position:absolute;inset:0;filter:saturate(0.9) sepia(8%) brightness(1.02);}
+  .topbar{
+    position:absolute;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;background:linear-gradient(180deg,rgba(237,230,214,0.97) 0%,rgba(237,230,214,0.88) 80%,rgba(237,230,214,0) 100%);
+    pointer-events:none;
+  }
+  .topbar > *{pointer-events:auto;}
+  .mode-panel{position:absolute;top:78px;left:20px;z-index:1000;width:270px;display:flex;flex-direction:column;gap:10px;}
+  .mode-tabs{display:flex;gap:6px;}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="topbar">
+  <div id="brand"></div>
+  <a class="btn small" href="index.html">← Back to map</a>
+</div>
+<div class="mode-panel">
+  <div class="mode-tabs">
+    <button class="btn small primary" id="tab-walk">Suggest a walk</button>
+    <button class="btn small" id="tab-explore">Explore</button>
+  </div>
+  <div id="mode-content" class="panel"><div class="empty-state">Loading stops…</div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("Plan your walk");
+
+  const map = L.map('map', { zoomControl: false }).setView([39.9469, -82.9934], 14);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(map);
+
+  let layers = [];
+  function clearLayers() { layers.forEach(l => map.removeLayer(l)); layers = []; }
+
+  function makeDot(hex, opacity, size, borderColor) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${hex};opacity:${opacity};border:2.5px solid ${borderColor || '#2B2A26'};box-shadow:1px 1px 0 rgba(43,42,38,0.3)"></div>`,
+      iconSize: [size, size], iconAnchor: [size / 2, size / 2]
+    });
+  }
+
+  function labelDot(text, bg) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:${bg};color:#FBF9F3;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;border:2px solid #2B2A26;box-shadow:1px 1px 0 rgba(43,42,38,0.3)">${text}</div>`,
+      iconSize: [30, 30], iconAnchor: [15, 15]
+    });
+  }
+
+  let currentHood = null;
+
+  function renderWalkMode(stops) {
+    clearLayers();
+    const verified = stops.filter(s => CDTT.isVerified(s.status) && (!currentHood || s.neighborhood === currentHood));
+    const content = document.getElementById("mode-content");
+    if (verified.length < 2) {
+      content.innerHTML = `<div class="empty-state">Not enough verified stops${currentHood ? ` in ${CDTT.escapeHtml(currentHood)}` : ""} yet to plan a walk — check back as more get confirmed on foot.</div>`;
+      map.setView([39.9469, -82.9934], 14);
+      return;
+    }
+    const ordered = CDTT.greedyRoute(verified);
+    ordered.forEach(s => {
+      const marker = L.marker([s.lat, s.lng], { icon: makeDot(CDTT.TYPE_META[s.type]?.color || '#B5502C', 1, 20) }).addTo(map);
+      marker.bindTooltip(s.name);
+      layers.push(marker);
+    });
+    const start = ordered[0], end = ordered[ordered.length - 1];
+    layers.push(L.marker([start.lat, start.lng], { icon: labelDot("START", "#4C6B4F") }).addTo(map));
+    layers.push(L.marker([end.lat, end.lng], { icon: labelDot("END", "#B5502C") }).addTo(map));
+    const line = L.polyline(ordered.map(s => [s.lat, s.lng]), { color: '#B5502C', weight: 3, dashArray: '2 8' }).addTo(map);
+    layers.push(line);
+    map.fitBounds(line.getBounds(), { padding: [60, 60] });
+
+    const miles = CDTT.routeDistanceMiles(ordered);
+    const minutes = Math.round((miles / 3) * 60); // ~3mph walking pace
+    const hoodLabel = currentHood || ordered[0].neighborhood;
+    content.innerHTML = `
+      <div class="panel-label">Route</div>
+      <div class="stop-name" style="font-size:15px;">${CDTT.escapeHtml(hoodLabel)} loop</div>
+      <div class="meta-line" style="margin:4px 0 8px;">${miles.toFixed(1)} mi &middot; ${ordered.length} verified stops &middot; ~${minutes} min walk</div>
+      <div style="font-size:12px;line-height:1.5;">Starts at ${CDTT.escapeHtml(start.name)}, ends at ${CDTT.escapeHtml(end.name)} — all stops confirmed on foot.</div>
+    `;
+  }
+
+  function renderExploreMode(stops) {
+    clearLayers();
+    const scoped = currentHood ? stops.filter(s => s.neighborhood === currentHood) : stops;
+    if (!scoped.length) {
+      document.getElementById("mode-content").innerHTML = `<div class="empty-state">No stops to explore${currentHood ? ` in ${CDTT.escapeHtml(currentHood)}` : ""} yet.</div>`;
+      return;
+    }
+    scoped.forEach(s => {
+      const unverified = !CDTT.isVerified(s.status);
+      const marker = L.marker([s.lat, s.lng], {
+        icon: makeDot(CDTT.TYPE_META[s.type]?.color || '#B5502C', unverified ? 1 : 0.28, unverified ? 24 : 14)
+      }).addTo(map).bindTooltip(s.name);
+      layers.push(marker);
+      if (unverified) {
+        const ring = L.circleMarker([s.lat, s.lng], { radius: 20, color: '#C68A2E', weight: 2, dashArray: '3 5', fillOpacity: 0 }).addTo(map);
+        layers.push(ring);
+      }
+    });
+    const bounds = L.latLngBounds(scoped.map(s => [s.lat, s.lng]));
+    map.fitBounds(bounds, { padding: [80, 80], maxZoom: 15 });
+
+    const unverifiedCount = scoped.filter(s => !CDTT.isVerified(s.status)).length;
+    document.getElementById("mode-content").innerHTML = `
+      <div class="panel-label">Needs a look</div>
+      <div style="font-size:12px;line-height:1.5;">${unverifiedCount} unverified report${unverifiedCount !== 1 ? "s" : ""}${currentHood ? ` in ${CDTT.escapeHtml(currentHood)}` : " nearby"} — dashed amber rings mark stops that haven't been walked yet. Faded dots are already confirmed.</div>
+      <div class="meta-line" style="margin-top:6px;">Pick one on your next walk and mark it verified.</div>
+    `;
+  }
+
+  let mode = "walk";
+  let allStops = [];
+  function render() { mode === "walk" ? renderWalkMode(allStops) : renderExploreMode(allStops); }
+
+  document.getElementById("tab-walk").addEventListener("click", (e) => {
+    mode = "walk";
+    document.getElementById("tab-walk").classList.add("primary");
+    document.getElementById("tab-explore").classList.remove("primary");
+    render();
+  });
+  document.getElementById("tab-explore").addEventListener("click", () => {
+    mode = "explore";
+    document.getElementById("tab-explore").classList.add("primary");
+    document.getElementById("tab-walk").classList.remove("primary");
+    render();
+  });
+
+  async function init() {
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+    currentHood = hash.get("hood") || null;
+    try {
+      allStops = await CDTT.loadStops();
+    } catch (err) {
+      document.getElementById("mode-content").innerHTML = `<div class="empty-state">Couldn't load the trail data right now.</div>`;
+      return;
+    }
+    render();
+  }
+  init();
+</script>
+
+</body>
+</html>

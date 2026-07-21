@@ -1,0 +1,86 @@
+<!--
+  Columbus Dog Treat Trail — Onboarding
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  html,body{height:100%;}
+  .screen{
+    height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    padding:48px 28px 32px; max-width:420px; margin:0 auto; text-align:center;
+  }
+  .icon-badge{
+    width:84px; height:84px; border-radius:50%; background:var(--white); border:2px solid var(--ink);
+    box-shadow:var(--shadow-md); display:flex; align-items:center; justify-content:center; margin-bottom:4px;
+  }
+  .icon-badge svg{width:38px;height:38px;}
+  .step-body{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;}
+  .step-title{font-family:var(--font-display); font-weight:700; font-size:22px; max-width:280px;}
+  .step-copy{font-size:14px; color:var(--ink-soft); max-width:280px; line-height:1.5;}
+  .dots{display:flex; gap:6px;}
+  .dots span{height:7px; border-radius:4px; background:var(--line); width:7px; transition:all 0.15s ease;}
+  .dots span.active{width:18px; background:var(--rust);}
+  .step-actions{display:flex; flex-direction:column; align-items:center; gap:14px; width:100%;}
+  .skip{
+    font-family:var(--font-mono); font-size:10.5px; color:var(--ink-soft); text-transform:uppercase;
+    letter-spacing:0.08em; background:none; border:none; cursor:pointer; text-decoration:underline;
+  }
+</style>
+</head>
+<body>
+
+<div class="screen" id="screen"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  const SCREENS = [
+    { icon: CDTTSite.ICONS.toy.replace('icon', 'icon-lg'), title: "Find hidden stashes", body: "Treat stands, stick libraries, water bowls, and toy boxes — spotted by neighbors on their daily walks." },
+    { icon: CDTTSite.ICONS.mapPin.replace('icon', 'icon-lg'), title: "Verified on foot", body: "Every stop starts unverified until someone walks it and confirms it’s really there." },
+    { icon: CDTTSite.ICONS.verified.replace('icon', 'icon-lg'), title: "Help the trail grow", body: "Suggest a stop you've spotted, or mark one verified once you've checked it yourself." }
+  ];
+
+  function next() {
+    step = step < SCREENS.length - 1 ? step + 1 : null;
+    if (step === null) return finish();
+    render();
+  }
+
+  function finish() {
+    try { localStorage.setItem("cdtt_onboarded", "1"); } catch (err) { /* private browsing, etc. — fine to skip */ }
+    const params = new URLSearchParams(location.search);
+    location.href = params.get("next") || "index.html";
+  }
+
+  let step = 0;
+  function render() {
+    const s = SCREENS[step];
+    document.getElementById("screen").innerHTML = `
+      <div class="step-body">
+        <div class="icon-badge">${s.icon}</div>
+        <div class="step-title">${s.title}</div>
+        <div class="step-copy">${s.body}</div>
+      </div>
+      <div class="step-actions">
+        <div class="dots">${SCREENS.map((_, i) => `<span class="${i === step ? 'active' : ''}"></span>`).join('')}</div>
+        <button class="btn primary" id="next-btn">${step < SCREENS.length - 1 ? "Next" : "Start exploring"}</button>
+        <button class="skip" id="skip-btn">Skip</button>
+      </div>
+    `;
+    document.getElementById("next-btn").addEventListener("click", next);
+    document.getElementById("skip-btn").addEventListener("click", finish);
+  }
+  render();
+</script>
+
+</body>
+</html>

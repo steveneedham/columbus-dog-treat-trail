@@ -1,0 +1,79 @@
+<!--
+  Columbus Dog Treat Trail — Moderation Queue
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moderation — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<div class="page page-wide">
+  <div class="page-topbar">
+    <div id="brand"></div>
+    <span id="count-badge"></span>
+  </div>
+  <div id="content" class="panel"><div class="empty-state">Loading…</div></div>
+  <div class="footer-note">
+    This is a read-only view of the Form Responses tab — approving still means typing
+    <code>Y</code> in the sheet's <code>Approve?</code> column (see SETUP.md step 3), the
+    same one-way, no-login workflow <code>approval.gs</code> already runs on.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("Moderation queue");
+
+  async function init() {
+    const content = document.getElementById("content");
+    if (!CDTT.CONFIG.SUBMISSIONS_CSV_URL) {
+      content.innerHTML = `
+        <div class="empty-state">
+          Not configured yet — publish the "Form Responses" tab as its own CSV (File &gt; Share &gt;
+          Publish to web, same as the Stops tab) and paste that URL into
+          <code>CONFIG.SUBMISSIONS_CSV_URL</code> in <code>assets/stops-client.js</code>. See SETUP.md.
+        </div>`;
+      return;
+    }
+    let submissions = [];
+    try {
+      submissions = await CDTT.loadSubmissions();
+    } catch (err) {
+      content.innerHTML = `<div class="empty-state">Couldn't load the submissions sheet right now — try again in a bit.</div>`;
+      return;
+    }
+    const pending = submissions.filter(s => !s.approve);
+    document.getElementById("count-badge").innerHTML = `<span class="badge unverified">${pending.length} pending</span>`;
+
+    if (!pending.length) {
+      content.innerHTML = `<div class="empty-state">All caught up — no pending submissions.</div>`;
+      return;
+    }
+
+    content.outerHTML = pending.map(item => `
+      <div class="panel">
+        <div class="stop-name" style="font-size:16px;">${CDTT.escapeHtml(item.name)}</div>
+        <div class="meta-line" style="margin:4px 0 8px;">
+          ${CDTT.escapeHtml(item.type || "type unset")} &middot; ${CDTT.escapeHtml(item.neighborhood || "neighborhood unset")}
+          ${item.yearRound ? ` &middot; ${CDTT.escapeHtml(item.yearRound)}` : ""}
+          &middot; via ${CDTT.escapeHtml(item.submitter)}
+        </div>
+        ${item.venue ? `<div style="font-style:italic;font-size:12px;color:var(--ink-soft);margin-bottom:6px;">${CDTT.escapeHtml(item.venue)}</div>` : ""}
+        <div style="font-size:12.5px;line-height:1.5;">${CDTT.escapeHtml(item.notes || "(no notes)")}</div>
+        ${item.address ? `<div class="meta-line" style="margin-top:8px;">Address/cross-streets: ${CDTT.escapeHtml(item.address)}</div>` : ""}
+      </div>
+    `).join("");
+  }
+  init();
+</script>
+
+</body>
+</html>
