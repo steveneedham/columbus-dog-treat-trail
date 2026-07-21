@@ -1,0 +1,75 @@
+<!--
+  Columbus Dog Treat Trail — Neighborhoods
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neighborhoods — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .hood-row{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .hood-name{font-family:var(--font-display);font-weight:600;font-size:16px;}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-topbar">
+    <div id="brand"></div>
+    <a class="btn small" href="index.html">← Back to map</a>
+  </div>
+  <div id="list" class="panel"><div class="empty-state">Loading stops…</div></div>
+  <div class="footer-note">Columbus Dog Treat Trail &middot; &copy; 2026 Steven Needham</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("Browse by neighborhood");
+
+  async function init() {
+    let stops = [];
+    try {
+      stops = await CDTT.loadStops();
+    } catch (err) {
+      document.getElementById("list").innerHTML = `<div class="empty-state">Couldn't load stops right now — try again in a bit.</div>`;
+      return;
+    }
+    if (!stops.length) {
+      document.getElementById("list").outerHTML = `<div class="panel"><div class="empty-state">No stops on the trail yet.</div></div>`;
+      return;
+    }
+    const byHood = new Map();
+    stops.forEach(s => {
+      const key = s.neighborhood || "Unassigned";
+      if (!byHood.has(key)) byHood.set(key, []);
+      byHood.get(key).push(s);
+    });
+    const hoods = [...byHood.entries()]
+      .map(([name, list]) => ({
+        name,
+        total: list.length,
+        verified: list.filter(s => CDTT.isVerified(s.status)).length
+      }))
+      .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+
+    document.getElementById("list").outerHTML = hoods.map(h => `
+      <a class="panel hood-row" style="text-decoration:none;color:inherit;display:flex;" href="index.html#hood=${encodeURIComponent(h.name)}">
+        <div>
+          <div class="hood-name">${CDTT.escapeHtml(h.name)}</div>
+          <div class="meta-line" style="margin-top:3px;">${h.total} stop${h.total !== 1 ? "s" : ""} &middot; ${h.verified} verified</div>
+        </div>
+        <div class="btn small">View →</div>
+      </a>
+    `).join("");
+  }
+  init();
+</script>
+
+</body>
+</html>

@@ -11,6 +11,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Columbus Dog Treat Trail</title>
+<script>
+  // First-visit-only intro: send brand-new visitors through the 3-screen
+  // onboarding before their first map view. Anyone who's completed it
+  // (or explicitly skipped it) has the flag set and never sees this again.
+  // ?skip_onboarding=1 bypasses it (useful for testing/links from fliers).
+  (function () {
+    if (/[?&]skip_onboarding=1\b/.test(location.search)) return;
+    var onboarded = false;
+    try { onboarded = localStorage.getItem("cdtt_onboarded") === "1"; } catch (err) { onboarded = true; }
+    if (!onboarded) location.replace("onboarding.html?next=" + encodeURIComponent("index.html" + location.hash));
+  })();
+</script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjQjU1MDJDIi8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTAsNTgpIHNjYWxlKDAuNDIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9IjMwIiByeD0iMjciIHJ5PSIyMSIgZmlsbD0iI0Y3RjRFQyIvPjxlbGxpcHNlIGN4PSItMjciIGN5PSItMiIgcng9IjEyIiByeT0iMTUuNSIgZmlsbD0iI0Y3RjRFQyIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIC0yNyAtMikiLz48ZWxsaXBzZSBjeD0iLTkiIGN5PSItMTkiIHJ4PSIxMiIgcnk9IjE2IiBmaWxsPSIjRjdGNEVDIiB0cmFuc2Zvcm09InJvdGF0ZSgtOCAtOSAtMTkpIi8+PGVsbGlwc2UgY3g9IjEyIiBjeT0iLTE5IiByeD0iMTIiIHJ5PSIxNiIgZmlsbD0iI0Y3RjRFQyIgdHJhbnNmb3JtPSJyb3RhdGUoOCAxMiAtMTkpIi8+PGVsbGlwc2UgY3g9IjMwIiBjeT0iLTIiIHJ4PSIxMiIgcnk9IjE1LjUiIGZpbGw9IiNGN0Y0RUMiIHRyYW5zZm9ybT0icm90YXRlKDIyIDMwIC0yKSIvPjwvZz48L3N2Zz4K">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,7 +61,8 @@
     font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--ink-soft);
     text-transform:uppercase; letter-spacing:0.08em;
   }
-  .actions{ display:flex; gap:8px; }
+  .actions{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+  .actions-row{ display:flex; gap:8px; }
   .btn{
     font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
     padding:9px 14px; border-radius:3px; border:1.5px solid var(--ink);
@@ -61,6 +74,26 @@
   .btn:active{ transform: scale(0.97); }
   .btn.primary{ background:var(--rust); color:var(--white); border-color:var(--rust); }
   .btn.primary:hover{ background:#96401F; border-color:#96401F; }
+  .icon{ width:14px; height:14px; display:inline-block; flex-shrink:0; }
+  .nav-links{ display:flex; gap:12px; }
+  .nav-links a{
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:600; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.06em; text-decoration:none;
+  }
+  .nav-links a:hover{ color:var(--ink); text-decoration:underline; }
+
+  /* Toast confirmation, shown after "Mark verified" / share actions */
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(6px); z-index:3000;
+    display:flex; align-items:center; gap:10px; background:var(--white);
+    border:1.5px solid var(--moss); border-radius:4px; box-shadow:3px 3px 0 rgba(43,42,38,0.18);
+    padding:10px 14px; font-family:'Inter',sans-serif; font-size:13px; color:var(--ink);
+    opacity:0; pointer-events:none; transition:opacity 0.18s ease, transform 0.18s ease;
+  }
+  .toast.error{ border-color:var(--rust); }
+  .toast.open{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast .dot{ width:8px; height:8px; border-radius:50%; background:var(--moss); flex-shrink:0; }
+  .toast.error .dot{ background:var(--rust); }
 
   /* Filter chips */
   .filters{
@@ -113,10 +146,17 @@
     font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700;
     padding:5px 8px; border-radius:2px; border:1px solid var(--ink); cursor:pointer;
     background:var(--paper); text-decoration:none; color:var(--ink); text-transform:uppercase;
+    display:inline-flex; align-items:center; gap:4px;
   }
   .pop-btn.confirm{ background:var(--moss); color:var(--white); border-color:var(--moss); }
   .pop-btn.confirm:hover{ background:#3B5540; }
   .pop-btn:hover{ background:var(--ink); color:var(--white); }
+  .pop-btn .icon{ width:11px; height:11px; }
+  .sponsored-star{
+    position:absolute; top:-6px; right:-6px; font-size:9px; line-height:1; background:var(--amber);
+    color:var(--white); border-radius:50%; width:13px; height:13px; display:flex; align-items:center;
+    justify-content:center; border:1px solid var(--ink);
+  }
   .pop-photo{
     width:100%; height:110px; object-fit:cover; border-radius:3px;
     border:1px solid var(--line); margin-bottom:8px; display:block;
@@ -175,8 +215,16 @@
     </div>
   </div>
   <div class="actions">
-    <button class="btn" id="locate-btn">📍 Near me</button>
-    <button class="btn primary" id="suggest-btn">+ Suggest a stop</button>
+    <div class="actions-row">
+      <button class="btn" id="locate-btn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 12 2a7 7 0 0 1 7 7.5C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5" fill="currentColor" stroke="none"></circle></svg> Near me</button>
+      <button class="btn primary" id="suggest-btn">+ Suggest a stop</button>
+    </div>
+    <div class="nav-links">
+      <a href="neighborhoods.html">Neighborhoods</a>
+      <a href="routes.html">Routes</a>
+      <a href="profile.html">Profile</a>
+      <a href="trail-flier.html">Flier</a>
+    </div>
   </div>
 </div>
 
@@ -191,7 +239,9 @@
   <div class="row" style="margin-top:4px;">Dashed ring = seasonal</div>
 </div>
 
-<div class="footer">Columbus Dog Treat Trail v0.5 · &copy; 2026 Steven Needham</div>
+<div class="footer">Columbus Dog Treat Trail v0.5 · &copy; 2026 Steven Needham · <a href="moderation.html" style="color:inherit;">Moderation</a></div>
+
+<div class="toast" id="toast"><span class="dot"></span><span id="toast-msg"></span></div>
 
 <div class="modal-backdrop" id="modal">
   <div class="modal">
@@ -290,7 +340,12 @@
         submitted_by: row.submitted_by || "",
         date_added: row.date_added || "",
         venue: row.venue || "",
-        photo_url: row.photo_url || ""
+        photo_url: row.photo_url || "",
+        // Optional column, see SETUP.md — visual sketch of the roadmap's
+        // "commercial layer" (sponsored/featured pins). Absent column
+        // means false for every existing sheet, so this is backward
+        // compatible with the current schema.
+        sponsored: /^(y|yes|true|1)$/i.test((row.sponsored || "").trim())
       }))
       .filter(s => s.name && Number.isFinite(s.lat) && Number.isFinite(s.lng) && TYPE_META_KEYS.includes(s.type));
   }
@@ -366,20 +421,51 @@
   let activeTypes = new Set(Object.keys(TYPE_META));
   let markers = [];
 
-  function makeIcon(type, status) {
+  function makeIcon(type, status, sponsored) {
     const color = TYPE_META[type]?.color || "#B5502C";
     const ring = isVerified(status) ? "#4C6B4F" : "#C68A2E";
     const borderStyle = isSeasonal(status) ? "dashed" : "solid";
+    const outline = sponsored ? "outline:2px solid #C68A2E; outline-offset:2px;" : "";
+    const star = sponsored ? `<span class="sponsored-star">★</span>` : "";
     return L.divIcon({
       className: '',
-      html: `<div style="
-        width:22px;height:22px;border-radius:50%;
-        background:${color}; border:3px ${borderStyle} ${ring};
-        box-shadow:1px 1px 0 rgba(43,42,38,0.3);
-      "></div>`,
+      html: `<div style="position:relative;width:22px;height:22px;">
+        <div style="
+          width:22px;height:22px;border-radius:50%;
+          background:${color}; border:3px ${borderStyle} ${ring}; ${outline}
+          box-shadow:1px 1px 0 rgba(43,42,38,0.3);
+        "></div>${star}
+      </div>`,
       iconSize: [22, 22],
       iconAnchor: [11, 11]
     });
+  }
+
+  const ICON_DIRECTIONS = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4v4"></path><path d="M18 4 9 13"></path><path d="M12 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>`;
+  const ICON_SHARE = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"></path><path d="M11 6l1-1a3.5 3.5 0 0 1 5 5l-1 1"></path><path d="M13 18l-1 1a3.5 3.5 0 0 1-5-5l1-1"></path></svg>`;
+  const ICON_REPORT = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4"></path><circle cx="12" cy="16.6" r="0.9" fill="currentColor" stroke="none"></circle></svg>`;
+
+  function showToast(message, kind) {
+    const el = document.getElementById("toast");
+    el.classList.toggle("error", kind === "error");
+    document.getElementById("toast-msg").textContent = message;
+    el.classList.add("open");
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => el.classList.remove("open"), 2600);
+  }
+
+  async function shareStop(stop) {
+    const url = `${location.origin}${location.pathname.replace(/[^/]*$/, "")}stop-detail.html?id=${encodeURIComponent(stop.id)}`;
+    const shareData = { title: stop.name, text: `${stop.name} — Columbus Dog Treat Trail`, url };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; } catch (err) { /* cancelled/unsupported, fall through */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("Link copied to clipboard");
+    } catch (err) {
+      showToast("Couldn't copy the link.", "error");
+    }
   }
 
   function popupHTML(stop) {
@@ -389,14 +475,16 @@
       : '<span class="badge unverified">Unverified</span>';
     const seasonalTag = isSeasonal(stop.status) ? ' · <span class="badge unverified" style="background:var(--ink-soft)">Seasonal</span>' : '';
     return `
-      <div class="pop-name">${stop.name}</div>
+      <div class="pop-name">${stop.name}${stop.sponsored ? " ★" : ""}</div>
       ${stop.photo_url ? `<img class="pop-photo" src="${stop.photo_url}" alt="${stop.name}" loading="lazy" onerror="this.remove()">` : ""}
       <div class="pop-meta">${meta.label} · ${stop.neighborhood} · ${badge}${seasonalTag}</div>
       ${stop.venue ? `<div class="pop-venue">${stop.venue}</div>` : ""}
       <div class="pop-notes">${stop.notes || ""}</div>
       <div class="pop-actions">
-        <a class="pop-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}">Directions</a>
+        <a class="pop-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}">${ICON_DIRECTIONS} Directions</a>
+        <button class="pop-btn" data-share="${stop.id}">${ICON_SHARE} Share</button>
         ${!isVerified(stop.status) ? `<button class="pop-btn confirm" data-confirm="${stop.id}">Mark verified</button>` : ""}
+        ${!isVerified(stop.status) ? `<a class="pop-btn" href="mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20Report%20a%20problem&body=Stop%3A%20${encodeURIComponent(stop.name)}%20(id%20${stop.id})%0AProblem%3A%0A">${ICON_REPORT} Report</a>` : ""}
       </div>
     `;
   }
@@ -407,10 +495,12 @@
     stops
       .filter(s => activeTypes.has(s.type))
       .forEach(stop => {
-        const marker = L.marker([stop.lat, stop.lng], { icon: makeIcon(stop.type, stop.status) })
+        const marker = L.marker([stop.lat, stop.lng], { icon: makeIcon(stop.type, stop.status, stop.sponsored) })
           .addTo(map)
           .bindPopup(popupHTML(stop));
         marker.on('popupopen', () => {
+          const shareBtn = document.querySelector(`[data-share="${stop.id}"]`);
+          if (shareBtn) shareBtn.addEventListener('click', () => shareStop(stop));
           const btn = document.querySelector(`[data-confirm="${stop.id}"]`);
           if (btn) {
             btn.addEventListener('click', async () => {
@@ -419,8 +509,9 @@
                 // v0.1: local-only preview, and you flip `status` by
                 // hand in Stops to make it stick.
                 stop.status = isSeasonal(stop.status) ? "seasonal-verified" : "verified";
-                marker.setIcon(makeIcon(stop.type, stop.status));
+                marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored));
                 marker.setPopupContent(popupHTML(stop));
+                showToast(`${stop.name} marked verified (local preview only).`);
                 return;
               }
               btn.disabled = true;
@@ -436,15 +527,16 @@
                     stop.status = result.status;
                     pendingVerify.set(String(stop.id), Date.now());
                   }
-                  marker.setIcon(makeIcon(stop.type, stop.status));
+                  marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored));
                   marker.setPopupContent(popupHTML(stop));
+                  if (result.changed) showToast(`${stop.name} marked verified — thanks for checking it on foot!`);
                 } else {
-                  alert("Couldn't save that — try again in a bit.");
+                  showToast("Couldn't save that — try again in a bit.", "error");
                   btn.disabled = false;
                   btn.textContent = "Mark verified";
                 }
               } catch (err) {
-                alert("Network error — try again.");
+                showToast("Network error — try again.", "error");
                 btn.disabled = false;
                 btn.textContent = "Mark verified";
               }
@@ -474,10 +566,21 @@
     filtersEl.appendChild(chip);
   });
 
+  // Deep-link support for #hood=Name (used by neighborhoods.html "View →")
+  // — fly to the bounds of that neighborhood's stops once they've loaded.
+  function flyToHoodFromHash() {
+    const match = /hood=([^&]+)/.exec(location.hash);
+    if (!match) return;
+    const hood = decodeURIComponent(match[1]);
+    const hoodStops = stops.filter(s => s.neighborhood === hood);
+    if (!hoodStops.length) return;
+    map.fitBounds(L.latLngBounds(hoodStops.map(s => [s.lat, s.lng])), { padding: [80, 80], maxZoom: 16 });
+  }
+
   // v0.5: initial load, then keep the map current in the background
   // (timer) and whenever someone pans/zooms to a new area (moveend) —
   // both share the same rate limit so neither can spam the Sheet.
-  refreshStops(true);
+  refreshStops(true).then(flyToHoodFromHash);
   map.on('moveend', () => refreshStops(false));
   setInterval(() => refreshStops(false), CONFIG.REFRESH_INTERVAL_MS);
 

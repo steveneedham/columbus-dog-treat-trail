@@ -203,3 +203,46 @@ step 4, which handles this automatically).
 
 On the map, seasonal stops get a **dashed ring** instead of a solid
 one — see the legend.
+
+## 6. Optional: sponsored/featured pins
+
+Add a `sponsored` column to `Stops` (any value — `y`/`yes`/`true`/`1`
+all count as "on", anything else including a blank cell is "off").
+A sponsored stop gets an amber ring + star badge on the map, in
+popups, and on `stop-detail.html`. This is wired up as pure visual
+plumbing for the README's "commercial layer" roadmap item — nothing
+elsewhere in the site charges for it or manages who's sponsored.
+
+## 7. Optional: the moderation queue (`moderation.html`)
+
+`moderation.html` is a **read-only** view of pending submissions — it
+doesn't (and, being a static page with no login, can't) write
+approvals back to the sheet. Approving still means the same manual
+"type `Y` in the Approve? column" step from Step 3 above, or letting
+`approval.gs` do it. To turn the page on:
+
+1. Publish the **Form Responses** tab as its own CSV, the same way as
+   the `Stops` tab in Step 1 (File → Share → Publish to web → pick
+   the Form Responses tab → CSV → Publish).
+2. Paste that URL into `CONFIG.SUBMISSIONS_CSV_URL` near the top of
+   `assets/stops-client.js`.
+
+Leave it blank and the page just says so instead of showing fake
+data — same "leave it blank to skip" pattern as the rest of `CONFIG`.
+
+## 8. The other new pages
+
+`neighborhoods.html`, `stop-detail.html`, `profile.html`, `routes.html`,
+and `trail-flier.html` all read the same published `Stops` CSV (via
+`assets/stops-client.js`) and need no extra setup — they work as soon
+as `CONFIG.SHEET_CSV_URL` in `index.html` does. `profile.html`'s
+leaderboard and avatar tiers are derived entirely from the `status`
+and `submitted_by` columns already in `Stops`; there's no separate
+accounts system, so "which contributor are you" is just a
+locally-remembered picker, not a login.
+
+`onboarding.html` is shown once per browser (via `localStorage`)
+before someone's first `index.html` view, then never again unless
+their browser storage is cleared. Add `?skip_onboarding=1` to any
+`index.html` link to bypass it (handy for the flier or your own
+testing).
