@@ -124,6 +124,7 @@
   }
   .chip.active{ border-color:var(--ink); background:var(--white); font-weight:600; }
   .dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .chip-icon{ width:14px; height:14px; flex-shrink:0; opacity:0.85; }
 
   /* Legend / status key, bottom left */
   .legend{
@@ -463,11 +464,14 @@
   function isVerified(status) { return status === "verified" || status === "seasonal-verified"; }
   function isSeasonal(status) { return status === "seasonal-verified" || status === "seasonal-unverified"; }
 
+  // Icon paths match components/core/Chip.jsx's icon prop and
+  // guidelines/brand-icons.html — "mixed" has no dedicated glyph in that
+  // set (dot-only there too), so it's the one type left without one here.
   const TYPE_META = {
-    treat_stand:   { label: "Treat stand",   color: "#B5502C" },
-    stick_library: { label: "Stick library", color: "#4C6B4F" },
-    water_bowl:    { label: "Water bowl",     color: "#3E6E8E" },
-    toy_box:       { label: "Toy box",        color: "#8A5FB0" },
+    treat_stand:   { label: "Treat stand",   color: "#B5502C", icon: "assets/icons/treat.svg" },
+    stick_library: { label: "Stick library", color: "#4C6B4F", icon: "assets/icons/stick.svg" },
+    water_bowl:    { label: "Water bowl",     color: "#3E6E8E", icon: "assets/icons/water-bowl.svg" },
+    toy_box:       { label: "Toy box",        color: "#8A5FB0", icon: "assets/icons/toy.svg" },
     mixed:         { label: "Mixed",          color: "#C68A2E" }
   };
   const TYPE_META_KEYS = Object.keys(TYPE_META);
@@ -721,7 +725,8 @@
   Object.entries(TYPE_META).forEach(([key, meta]) => {
     const chip = document.createElement('button');
     chip.className = 'chip active';
-    chip.innerHTML = `<span class="dot" style="background:${meta.color}"></span>${meta.label}`;
+    const chipIcon = meta.icon ? `<img class="chip-icon" src="${meta.icon}" alt="">` : "";
+    chip.innerHTML = `<span class="dot" style="background:${meta.color}"></span>${chipIcon}${meta.label}`;
     chip.addEventListener('click', () => {
       if (activeTypes.has(key)) {
         activeTypes.delete(key);
