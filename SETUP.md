@@ -303,3 +303,49 @@ site's voice, a one-line mention somewhere on the map (or a
 default (cookie-based, no PII) event collection in most jurisdictions.
 Not legal advice — check what applies to you if you expect EU/UK
 visitors.
+
+## 12. Optional: "Join the trail" sign-in (`signup.html`)
+
+`signup.html` is a real, working page — not a stand-in — but it does
+nothing until you set `GOOGLE_CLIENT_ID` near the top of its script.
+It deliberately only offers **Google sign-in**, not a custom
+email/password form: a static site with no server has no safe way to
+hash and store real passwords, and Google Identity Services hands you
+a genuinely verified identity (a real email address, no account
+creation flow for you to build or secure) for free.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create
+   (or reuse) a project, then **APIs & Services → Credentials → Create
+   Credentials → OAuth client ID → Web application**.
+2. Under **Authorized JavaScript origins**, add this site's real
+   origin (e.g. `https://steveneedham.github.io`) — Google Identity
+   Services will refuse to initialize from an unlisted origin.
+3. Copy the resulting Client ID (`xxxxxxxxxx.apps.googleusercontent.com`)
+   into `GOOGLE_CLIENT_ID` near the top of `signup.html`'s script.
+
+Until that's set, the page shows "Sign-in isn't configured yet"
+instead of a broken button — same graceful-degradation pattern as
+every other optional `CONFIG` value on this site.
+
+**What actually happens on sign-in:** Google's own button (rendered by
+their SDK, not a custom-styled fake) opens the real Google account
+picker. On success, the page decodes the returned ID token client-side
+(just base64 — nothing is verified server-side) to get `{ name, email,
+sub, picture }`, saves it to this browser's `localStorage` as
+`cdtt_member`, and `index.html`'s nav shows "Hi, {name}" instead of
+"Join the trail" from then on.
+
+**Making it durable across devices (optional):** by default the signed-
+in identity only lives in that one browser. To persist it:
+
+1. In the same Apps Script project as the other endpoints, add
+   [`join.gs`](./join.gs).
+2. Add a **Members** tab to the spreadsheet: header row
+   `google_sub | name | email | joined_at`.
+3. Deploy `join.gs` as its own Web App (same Execute-as-Me,
+   Anyone-can-access pattern as `verify.gs`) and paste the URL into
+   `JOIN_URL` near the top of `signup.html`.
+
+Read the security note at the top of `join.gs` — it trusts whatever
+the browser sends it, same honesty-over-security tradeoff as the
+rest of this no-login site's endpoints.

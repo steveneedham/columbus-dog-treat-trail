@@ -274,6 +274,7 @@
       <a href="routes.html">Routes</a>
       <a href="profile.html">Profile</a>
       <a href="trail-flier.html">Flier</a>
+      <a href="signup.html" id="member-link">Join the trail</a>
     </div>
   </div>
 </div>
@@ -801,6 +802,14 @@
   // Share modal (desktop fallback when navigator.share is unavailable)
   const shareModal = document.getElementById('share-modal');
   shareModal.addEventListener('click', (e) => { if (e.target === shareModal) shareModal.classList.remove('open'); });
+
+  // Reflect signed-in state (set by signup.html's Google sign-in) in the nav link.
+  try {
+    const member = JSON.parse(localStorage.getItem('cdtt_member') || 'null');
+    if (member && (member.name || member.email)) {
+      document.getElementById('member-link').textContent = `Hi, ${(member.name || member.email).split(' ')[0]}`;
+    }
+  } catch (err) { /* ignore malformed localStorage */ }
 </script>
 
 </body>
