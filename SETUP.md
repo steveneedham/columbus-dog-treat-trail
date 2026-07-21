@@ -246,3 +246,13 @@ before someone's first `index.html` view, then never again unless
 their browser storage is cleared. Add `?skip_onboarding=1` to any
 `index.html` link to bypass it (handy for the flier or your own
 testing).
+
+## 9. Optional: weekly digest email
+
+`email-templates/weekly-digest.html` + [`digest.gs`](./digest.gs) send
+a "N new stops verified this week" email built from whatever's newly
+verified in `Stops`. This is **not** a public newsletter signup — it's
+meant for a short, manually-curated recipient list you set yourself
+(`DIGEST_RECIPIENTS` in Script Properties), the same trust model as
+`approval.gs`/`verify.gs`. See the comment at the top of `digest.gs`
+for setup steps and why this deliberately isn't a public opt-in list.
