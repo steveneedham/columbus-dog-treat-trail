@@ -1,0 +1,53 @@
+<!--
+  Columbus Dog Treat Trail — Weekly Digest Email Template
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+
+  Static, ready-to-send HTML for a "this week on the trail" digest — see
+  guidelines/content-digest-email.html for the source copy/design this is
+  built from. Email clients strip <style> blocks and external stylesheets
+  unpredictably, so everything here is inline and hex-coded rather than
+  pulling from tokens/colors.css or Google Fonts.
+
+  Merge fields (replace before sending, e.g. from digest.gs):
+    {{STOP_COUNT}}       — number of stops verified this week
+    {{HEADLINE_HOODS}}   — e.g. "German Village and Merion Village"
+    {{BODY_COPY}}        — 1-2 sentence summary of what's new
+    {{MAP_URL}}          — link back to the live map
+    {{UNSUBSCRIBE_URL}}  — required for any real recipient list (CAN-SPAM)
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>This week on the trail</title>
+</head>
+<body style="margin:0;padding:0;background-color:#EDE6D6;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE6D6;padding:24px 0;">
+<tr><td align="center">
+  <table role="presentation" width="420" cellpadding="0" cellspacing="0" style="max-width:420px;width:100%;background-color:#FBF9F3;border:2px solid #2B2A26;border-radius:4px;">
+    <tr><td style="padding:20px 22px;">
+      <div style="font-family:'Courier New',Courier,monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#5B5648;margin-bottom:8px;">
+        This week on the trail
+      </div>
+      <div style="font-family:Georgia,'Times New Roman',serif;font-weight:bold;font-size:19px;color:#2B2A26;margin-bottom:10px;">
+        {{STOP_COUNT}} new stops verified near you
+      </div>
+      <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#2B2A26;">
+        {{BODY_COPY}}
+      </div>
+      <div style="margin-top:18px;">
+        <a href="{{MAP_URL}}" style="display:inline-block;font-family:'Courier New',Courier,monospace;font-size:12px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;color:#FBF9F3;background-color:#B5502C;border:1.5px solid #B5502C;border-radius:3px;padding:10px 16px;text-decoration:none;">
+          Open the map &rarr;
+        </a>
+      </div>
+    </td></tr>
+  </table>
+  <div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#5B5648;margin-top:14px;">
+    Columbus Dog Treat Trail &middot; <a href="{{MAP_URL}}" style="color:#5B5648;">columbusdogtreattrail.com</a>
+    &middot; <a href="{{UNSUBSCRIBE_URL}}" style="color:#5B5648;">unsubscribe</a>
+  </div>
+</td></tr>
+</table>
+</body>
+</html>
