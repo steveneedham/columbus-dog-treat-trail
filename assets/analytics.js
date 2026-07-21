@@ -11,7 +11,7 @@
   Streams > your web stream), and paste it below.
 */
 (function () {
-  var GA_MEASUREMENT_ID = ""; // e.g. "G-XXXXXXXXXX" — blank disables analytics entirely
+  var GA_MEASUREMENT_ID = "G-63K9JCMGPT"; // blank disables analytics entirely
 
   if (!GA_MEASUREMENT_ID) return;
 
