@@ -194,6 +194,16 @@
     background:rgba(251,249,243,0.6); padding:2px 6px; border-radius:2px;
   }
 
+  /* Last-updated build stamp, lower-left — hand-set to the real date/time
+     of the most recent edit, bumped by hand on future changes (no build
+     step to derive it automatically). */
+  .build-stamp{
+    position:absolute; bottom:8px; left:12px; z-index:1000;
+    font-family:'JetBrains Mono', monospace; font-size:9.5px;
+    color:var(--ink-soft); opacity:0.75; pointer-events:none;
+    background:rgba(251,249,243,0.6); padding:2px 6px; border-radius:2px;
+  }
+
   /* Empty/offline states — see guidelines/brand-empty-states.html */
   .info-banner{
     position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:999;
@@ -279,6 +289,8 @@
 </div>
 
 <div class="footer">Columbus Dog Treat Trail v0.5 · &copy; 2026 Steven Needham · <a href="moderation.html" style="color:inherit;">Moderation</a> · <a href="admin.html" style="color:inherit;">Sitemap</a></div>
+
+<div class="build-stamp">Last updated 2026-07-21 22:02 UTC</div>
 
 <div class="toast" id="toast"><span class="dot"></span><span id="toast-msg"></span></div>
 
