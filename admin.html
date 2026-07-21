@@ -1,0 +1,85 @@
+<!--
+  Columbus Dog Treat Trail — Sitemap / Admin
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sitemap — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .page-link{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    text-decoration:none; color:inherit;
+  }
+  .page-link-name{font-family:var(--font-display);font-weight:600;font-size:15px;}
+  .page-link-desc{font-family:var(--font-body);font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .page-link-path{font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);white-space:nowrap;}
+  .section-title{
+    font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--ink-soft);margin:8px 0 -4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-topbar">
+    <div id="brand"></div>
+    <a class="btn small" href="index.html">← Back to map</a>
+  </div>
+
+  <div class="section-title">Live pages</div>
+  <div id="live-pages"></div>
+
+  <div class="section-title">Maintainer-only</div>
+  <div id="admin-pages"></div>
+
+  <div class="section-title">Design system reference</div>
+  <div id="reference-pages"></div>
+
+  <div class="footer-note">This page is just a static link list — it reads no data and isn't linked from the design system's own files. Add a link to it wherever's convenient (nav, footer, bookmark it directly).</div>
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("Sitemap");
+
+  function renderLinks(containerId, links) {
+    document.getElementById(containerId).innerHTML = links.map(l => `
+      <a class="panel page-link" href="${l.href}">
+        <div>
+          <div class="page-link-name">${l.name}</div>
+          <div class="page-link-desc">${l.desc}</div>
+        </div>
+        <div class="page-link-path">${l.path}</div>
+      </a>
+    `).join("");
+  }
+
+  renderLinks("live-pages", [
+    { name: "The map", desc: "The product itself — filterable pins, suggest/verify a stop, near me.", href: "index.html", path: "index.html" },
+    { name: "Onboarding", desc: "3-screen intro shown once per visitor before their first map view.", href: "onboarding.html", path: "onboarding.html" },
+    { name: "Neighborhoods", desc: "Browse stops grouped by neighborhood, with counts.", href: "neighborhoods.html", path: "neighborhoods.html" },
+    { name: "Routes", desc: "“Suggest a walk” (a real route through verified stops) and “Explore” mode.", href: "routes.html", path: "routes.html" },
+    { name: "Profile", desc: "Leaderboard, avatar levels, and badges derived from who's verified what.", href: "profile.html", path: "profile.html" },
+    { name: "Trail flier", desc: "Printable route card for a bulletin board, built from the current top loop.", href: "trail-flier.html", path: "trail-flier.html" },
+    { name: "Stop detail", desc: "Shareable single-stop page — needs a real <code>?id=</code> from a pin's Share button to show anything.", href: "stop-detail.html", path: "stop-detail.html?id=…" }
+  ]);
+
+  renderLinks("admin-pages", [
+    { name: "Moderation queue", desc: "Read-only view of pending submissions — needs CONFIG.SUBMISSIONS_CSV_URL set (see SETUP.md).", href: "moderation.html", path: "moderation.html" },
+    { name: "Weekly digest email", desc: "Static preview of the template digest.gs sends — not a live page, just markup.", href: "email-templates/weekly-digest.html", path: "email-templates/weekly-digest.html" }
+  ]);
+
+  renderLinks("reference-pages", [
+    { name: "Design system home", desc: "The Claude Design project's own thumbnail/index — components, tokens, guidelines.", href: "thumbnail.html", path: "thumbnail.html" },
+    { name: "Original map-app mockups", desc: "The static click-through prototypes these live pages were built from.", href: "ui_kits/map-app/index.html", path: "ui_kits/map-app/" }
+  ]);
+</script>
+
+</body>
+</html>
