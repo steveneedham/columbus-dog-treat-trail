@@ -17,7 +17,11 @@
     // way as the Stops tab, see SETUP.md) to power moderation.html's
     // pending-submissions queue. Leave blank to keep that page in its
     // "not configured yet" state.
-    SUBMISSIONS_CSV_URL: ""
+    SUBMISSIONS_CSV_URL: "",
+    // Optional: publish a "Contributors" tab (columns: name, avatar_slug)
+    // as its own CSV so profile.html's avatar picker is visible to every
+    // visitor, not just the browser that made the pick. See SETUP.md.
+    CONTRIBUTORS_CSV_URL: ""
   };
 
   const TYPE_META = {
@@ -95,6 +99,25 @@
     }).filter(s => s.name && !s.copied);
   }
 
+  // Returns a Map<lowercased name, avatar_slug> of contributors who've
+  // picked their own avatar via profile.html's picker, or an empty Map
+  // if CONTRIBUTORS_CSV_URL isn't configured — callers fall back to the
+  // deterministic hash-based assignment in that case.
+  async function loadContributorAvatars() {
+    const map = new Map();
+    if (!CONFIG.CONTRIBUTORS_CSV_URL) return map;
+    const res = await fetch(CONFIG.CONTRIBUTORS_CSV_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Contributors fetch failed: ${res.status}`);
+    const text = await res.text();
+    const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+    parsed.data.forEach(row => {
+      const name = (row.name || "").trim();
+      const slug = (row.avatar_slug || "").trim();
+      if (name && /^(0[1-9]|10)$/.test(slug)) map.set(name.toLowerCase(), slug);
+    });
+    return map;
+  }
+
   // Haversine distance in miles.
   function distanceMiles(a, b) {
     const R = 3958.8;
@@ -140,7 +163,7 @@
 
   global.CDTT = {
     CONFIG, TYPE_META, TYPE_META_KEYS,
-    isVerified, isSeasonal, csvToStops, loadStops, loadSubmissions,
+    isVerified, isSeasonal, csvToStops, loadStops, loadSubmissions, loadContributorAvatars,
     distanceMiles, greedyRoute, routeDistanceMiles, escapeHtml
   };
 })(window);

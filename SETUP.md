@@ -256,3 +256,50 @@ meant for a short, manually-curated recipient list you set yourself
 (`DIGEST_RECIPIENTS` in Script Properties), the same trust model as
 `approval.gs`/`verify.gs`. See the comment at the top of `digest.gs`
 for setup steps and why this deliberately isn't a public opt-in list.
+
+## 10. Optional: contributors choosing their own avatar
+
+`profile.html` lets each contributor pick which of the 10 base avatar
+faces represents them (a deliberate change from the design system's
+own sketch, which framed the face as an earned unlock — see
+`admin.html`'s Avatars section). Works with zero setup: picks are
+remembered per-browser in `localStorage`, so the picker sees their own
+choice everywhere, but nobody else does. To make picks visible to
+every visitor instead:
+
+1. In the same Apps Script project as `approval.gs`/`verify.gs`/`digest.gs`,
+   add a new script file and paste in [`set-avatar.gs`](./set-avatar.gs).
+2. In the same spreadsheet, add a tab named exactly **Contributors**
+   with header row `name | avatar_slug`.
+3. Deploy `set-avatar.gs` as its own Web App (same Execute-as-Me,
+   Anyone-can-access pattern as `verify.gs`) and paste the deployment
+   URL into `SET_AVATAR_URL` near the top of `profile.html`.
+4. Publish the Contributors tab as its own CSV (same "Publish to web"
+   flow as `Stops`) and paste that URL into
+   `CONFIG.CONTRIBUTORS_CSV_URL` in `assets/stops-client.js`.
+
+Read the security note at the top of `set-avatar.gs` first — like
+`verify.gs`, there's no real auth, but the worst case here is purely
+cosmetic (someone's avatar face changes), not a data-integrity risk.
+
+## 11. Optional: Google Analytics
+
+`assets/analytics.js` is a GA4 loader shared by every page — it does
+nothing until you set `GA_MEASUREMENT_ID` near the top of that file.
+
+1. Create a GA4 property at https://analytics.google.com (or use an
+   existing one) and find its Measurement ID under Admin → Data
+   Streams → your web stream (looks like `G-XXXXXXXXXX`).
+2. Paste it into `GA_MEASUREMENT_ID` in `assets/analytics.js`. Every
+   page that includes this script (all of them, as of this write-up)
+   starts sending pageviews immediately — no redeploy of anything else
+   needed.
+
+Worth deciding deliberately, not just flipping on: this is real
+visitor tracking on a small, personal, transparency-minded site — if
+you want to be upfront about it in the spirit of the rest of the
+site's voice, a one-line mention somewhere on the map (or a
+`privacy.html`) would fit, though nothing here requires it for GA4's
+default (cookie-based, no PII) event collection in most jurisdictions.
+Not legal advice — check what applies to you if you expect EU/UK
+visitors.

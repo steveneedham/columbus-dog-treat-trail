@@ -8,6 +8,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profile — Columbus Dog Treat Trail</title>
+<script src="assets/analytics.js"></script>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="assets/site.css">
 <style>
@@ -31,6 +32,14 @@
   .lb-count{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);}
   .who-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   select{font-family:var(--font-body);font-size:13px;padding:7px 10px;border-radius:var(--radius-md);border:1.5px solid var(--ink);background:var(--white);}
+  .avatar-picker{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .avatar-pick-btn{
+    width:48px;height:48px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer;
+    background:var(--paper);display:flex;align-items:center;justify-content:center;
+  }
+  .avatar-pick-btn img{width:44px;height:44px;border-radius:50%;}
+  .avatar-pick-btn.selected{border-color:var(--rust);}
+  .avatar-pick-btn:hover{border-color:var(--ink-soft);}
 </style>
 </head>
 <body>
@@ -50,7 +59,7 @@
   <div id="badges-panel"></div>
   <div id="leaderboard-panel" class="panel"><div class="empty-state">Loading contributors…</div></div>
 
-  <div class="footer-note">Levels are earned by verified stops only — suggesting one doesn't count until someone's walked it. See README for the tier thresholds.</div>
+  <div class="footer-note">Levels (collar at 3, crown at 10) are earned by verified stops only — suggesting one doesn't count until someone's walked it. Your avatar face itself is a free pick, independent of level.</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -58,6 +67,23 @@
 <script src="assets/site.js"></script>
 <script>
   document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("Contributor profile");
+
+  // Paste a set-avatar.gs Web App deployment URL here to make avatar
+  // picks visible to every visitor (via CONFIG.CONTRIBUTORS_CSV_URL in
+  // assets/stops-client.js). Leave blank and picks still work, but only
+  // persist in the picker's own browser (localStorage) — see SETUP.md.
+  const SET_AVATAR_URL = "";
+  const ALL_AVATAR_SLUGS = Array.from({ length: 10 }, (_, i) => String(i + 1).padStart(2, "0"));
+
+  function getLocalAvatarChoices() {
+    try { return JSON.parse(localStorage.getItem("cdtt_avatar_choices") || "{}"); }
+    catch (err) { return {}; }
+  }
+  function setLocalAvatarChoice(name, slug) {
+    const choices = getLocalAvatarChoices();
+    choices[name] = slug;
+    try { localStorage.setItem("cdtt_avatar_choices", JSON.stringify(choices)); } catch (err) { /* ignore */ }
+  }
 
   function avatarSlugFor(name) {
     let hash = 0;
@@ -109,6 +135,17 @@
       return;
     }
 
+    let contributorAvatars = new Map();
+    try { contributorAvatars = await CDTT.loadContributorAvatars(); } catch (err) { /* fine, falls back below */ }
+    const localChoices = getLocalAvatarChoices();
+
+    // Pick precedence: the shared Contributors sheet (visible to every
+    // visitor) > this browser's own localStorage pick > the deterministic
+    // hash, so an unconfigured site still gives everyone a stable face.
+    function resolveAvatarSlug(name) {
+      return contributorAvatars.get(name.toLowerCase()) || localChoices[name] || avatarSlugFor(name);
+    }
+
     const bySubmitter = new Map();
     stops.forEach(s => {
       const name = (s.submitted_by || "").trim();
@@ -122,7 +159,7 @@
     const contributors = [...bySubmitter.values()].map(c => ({
       ...c,
       tier: tierFor(c.verified),
-      avatarSlug: avatarSlugFor(c.name)
+      avatarSlug: resolveAvatarSlug(c.name)
     })).sort((a, b) => b.verified - a.verified || b.total - a.total || a.name.localeCompare(b.name));
 
     if (!contributors.length) {
@@ -141,6 +178,26 @@
     const params = new URLSearchParams(location.search);
     let savedName = params.get("name") || (() => { try { return localStorage.getItem("cdtt_profile_name"); } catch (e) { return null; } })();
     if (savedName && contributors.some(c => c.name === savedName)) select.value = savedName;
+
+    async function chooseAvatar(name, slug) {
+      setLocalAvatarChoice(name, slug);
+      const me = contributors.find(c => c.name === name);
+      if (me) me.avatarSlug = slug;
+      renderMe();
+      renderLeaderboard();
+      if (!SET_AVATAR_URL) {
+        CDTTSite.showToast("Avatar saved (visible on this device only — see SETUP.md to make it public).");
+        return;
+      }
+      try {
+        const res = await fetch(SET_AVATAR_URL, { method: "POST", body: new URLSearchParams({ name, avatar_slug: slug }) });
+        const result = await res.json();
+        if (result.ok) CDTTSite.showToast("Avatar saved for everyone.");
+        else CDTTSite.showToast("Saved locally, but couldn't sync it — try again in a bit.", "error");
+      } catch (err) {
+        CDTTSite.showToast("Saved locally, but couldn't sync it — try again in a bit.", "error");
+      }
+    }
 
     function renderMe() {
       const name = select.value;
@@ -161,7 +218,20 @@
             <div class="meta-line" style="margin-top:6px;">${nextTierCopy(me.verified, me.tier)}</div>
           </div>
         </div>
+        <div class="panel" style="margin-top:12px;">
+          <div class="panel-label">Choose your avatar</div>
+          <div class="avatar-picker">
+            ${ALL_AVATAR_SLUGS.map(slug => `
+              <button class="avatar-pick-btn ${slug === me.avatarSlug ? "selected" : ""}" data-pick-avatar="${slug}" title="Avatar ${slug}">
+                <img src="${avatarSrcFor(slug, slug === me.avatarSlug ? me.tier : 1)}">
+              </button>
+            `).join("")}
+          </div>
+        </div>
       `;
+      mePanel.querySelectorAll("[data-pick-avatar]").forEach(btn => {
+        btn.addEventListener("click", () => chooseAvatar(me.name, btn.getAttribute("data-pick-avatar")));
+      });
       const badgeDefs = [
         { earned: me.verified >= 1, icon: "assets/icons/badges/badge-first-stop.svg", label: "First stop" },
         { earned: me.hoods.size >= 3, icon: "assets/icons/badges/badge-explorer.svg", label: "Explorer" },
