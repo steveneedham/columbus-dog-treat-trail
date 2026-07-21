@@ -8,6 +8,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sitemap — Columbus Dog Treat Trail</title>
+<script src="assets/analytics.js"></script>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="assets/site.css">
 <style>
@@ -22,26 +23,69 @@
     font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;
     color:var(--ink-soft);margin:8px 0 -4px;
   }
+  .section-title.sub{margin-top:2px;opacity:0.8;}
+  .link-list{display:flex;flex-direction:column;gap:6px;}
+  .icon-grid{display:flex;flex-wrap:wrap;gap:12px;}
+  .icon-card{
+    display:flex;flex-direction:column;align-items:center;gap:6px;width:78px;text-align:center;
+    padding:8px 4px;
+  }
+  .icon-card img{width:36px;height:36px;}
+  .icon-card .icon-label{font-family:var(--font-mono);font-size:9px;color:var(--ink-soft);line-height:1.3;}
 </style>
 </head>
 <body>
 
-<div class="page">
+<div class="page page-wide">
   <div class="page-topbar">
     <div id="brand"></div>
     <a class="btn small" href="index.html">← Back to map</a>
   </div>
 
   <div class="section-title">Live pages</div>
-  <div id="live-pages"></div>
+  <div id="live-pages" class="link-list"></div>
 
   <div class="section-title">Maintainer-only</div>
-  <div id="admin-pages"></div>
+  <div id="admin-pages" class="link-list"></div>
 
-  <div class="section-title">Design system reference</div>
-  <div id="reference-pages"></div>
+  <div class="section-title">Icon set</div>
+  <div id="icon-gallery" class="panel"></div>
 
-  <div class="footer-note">This page is just a static link list — it reads no data and isn't linked from the design system's own files. Add a link to it wherever's convenient (nav, footer, bookmark it directly).</div>
+  <div class="section-title">Avatars</div>
+  <div class="footer-note" style="margin:-4px 0 4px;">
+    The live picker (profile.html) lets contributors freely choose any of these — a deliberate
+    change from the design system's own original sketch below, which framed the base face as an
+    earned unlock rather than a free pick.
+  </div>
+  <div id="avatar-gallery" class="panel"></div>
+
+  <div class="section-title">Badges</div>
+  <div id="badge-gallery" class="panel"></div>
+
+  <div class="section-title">Social sharing icons</div>
+  <div id="social-gallery" class="panel"></div>
+
+  <div class="section-title">Brand marks</div>
+  <div id="brand-gallery" class="panel"></div>
+
+  <div class="section-title">Every HTML page in this repo</div>
+
+  <div class="section-title sub">Design system — guidelines</div>
+  <div id="guideline-pages" class="link-list"></div>
+
+  <div class="section-title sub">Design system — components</div>
+  <div id="component-pages" class="link-list"></div>
+
+  <div class="section-title sub">Design system — original map-app mockups</div>
+  <div id="mockup-pages" class="link-list"></div>
+
+  <div class="section-title sub">Design system home &amp; uploaded source snapshots</div>
+  <div id="reference-pages" class="link-list"></div>
+
+  <div class="section-title sub">Internal / bundler artifacts</div>
+  <div id="internal-pages" class="link-list"></div>
+
+  <div class="footer-note">This page is just a static link list — it reads no live Sheet data. Add a link to it wherever's convenient (nav, footer, bookmark it directly).</div>
 </div>
 
 <script src="assets/site.js"></script>
@@ -60,12 +104,18 @@
     `).join("");
   }
 
+  function renderIconGrid(containerId, items) {
+    document.getElementById(containerId).innerHTML = `<div class="icon-grid">
+      ${items.map(i => `<div class="icon-card"><img src="${i.src}" loading="lazy"><span class="icon-label">${i.label}</span></div>`).join("")}
+    </div>`;
+  }
+
   renderLinks("live-pages", [
     { name: "The map", desc: "The product itself — filterable pins, suggest/verify a stop, near me.", href: "index.html", path: "index.html" },
     { name: "Onboarding", desc: "3-screen intro shown once per visitor before their first map view.", href: "onboarding.html", path: "onboarding.html" },
     { name: "Neighborhoods", desc: "Browse stops grouped by neighborhood, with counts.", href: "neighborhoods.html", path: "neighborhoods.html" },
     { name: "Routes", desc: "“Suggest a walk” (a real route through verified stops) and “Explore” mode.", href: "routes.html", path: "routes.html" },
-    { name: "Profile", desc: "Leaderboard, avatar levels, and badges derived from who's verified what.", href: "profile.html", path: "profile.html" },
+    { name: "Profile", desc: "Leaderboard, avatar picker, levels, and badges derived from who's verified what.", href: "profile.html", path: "profile.html" },
     { name: "Trail flier", desc: "Printable route card for a bulletin board, built from the current top loop.", href: "trail-flier.html", path: "trail-flier.html" },
     { name: "Stop detail", desc: "Shareable single-stop page — needs a real <code>?id=</code> from a pin's Share button to show anything.", href: "stop-detail.html", path: "stop-detail.html?id=…" }
   ]);
@@ -75,9 +125,118 @@
     { name: "Weekly digest email", desc: "Static preview of the template digest.gs sends — not a live page, just markup.", href: "email-templates/weekly-digest.html", path: "email-templates/weekly-digest.html" }
   ]);
 
+  renderIconGrid("icon-gallery", [
+    { src: "assets/icons/treat.svg", label: "treat" },
+    { src: "assets/icons/stick.svg", label: "stick" },
+    { src: "assets/icons/water-bowl.svg", label: "water-bowl" },
+    { src: "assets/icons/toy.svg", label: "toy" },
+    { src: "assets/icons/map-pin.svg", label: "map-pin" },
+    { src: "assets/icons/stop.svg", label: "stop" },
+    { src: "assets/icons/directions.svg", label: "directions" },
+    { src: "assets/icons/near-me.svg", label: "near-me" },
+    { src: "assets/icons/verified.svg", label: "verified" },
+    { src: "assets/icons/unverified.svg", label: "unverified" },
+    { src: "assets/icons/report-problem.svg", label: "report-problem" }
+  ]);
+
+  renderIconGrid("avatar-gallery", [
+    { src: "assets/icons/avatars/avatar-01.svg", label: "01" },
+    { src: "assets/icons/avatars/avatar-02.svg", label: "02" },
+    { src: "assets/icons/avatars/avatar-03.svg", label: "03" },
+    { src: "assets/icons/avatars/avatar-04.svg", label: "04" },
+    { src: "assets/icons/avatars/avatar-04-locked.svg", label: "04 locked" },
+    { src: "assets/icons/avatars/avatar-04-tier2-collar.svg", label: "04 collar" },
+    { src: "assets/icons/avatars/avatar-04-tier3-crown.svg", label: "04 crown" },
+    { src: "assets/icons/avatars/avatar-05.svg", label: "05" },
+    { src: "assets/icons/avatars/avatar-06.svg", label: "06" },
+    { src: "assets/icons/avatars/avatar-07.svg", label: "07" },
+    { src: "assets/icons/avatars/avatar-08.svg", label: "08" },
+    { src: "assets/icons/avatars/avatar-09.svg", label: "09" },
+    { src: "assets/icons/avatars/avatar-10.svg", label: "10" }
+  ]);
+
+  renderIconGrid("badge-gallery", [
+    { src: "assets/icons/badges/badge-first-stop.svg", label: "first stop" },
+    { src: "assets/icons/badges/badge-streak.svg", label: "streak" },
+    { src: "assets/icons/badges/badge-explorer.svg", label: "explorer" },
+    { src: "assets/icons/badges/badge-milestone-star.svg", label: "milestone" }
+  ]);
+
+  renderIconGrid("social-gallery", [
+    { src: "assets/icons/social/share.svg", label: "share" },
+    { src: "assets/icons/social/copy-link.svg", label: "copy-link" },
+    { src: "assets/icons/social/email.svg", label: "email" },
+    { src: "assets/icons/social/message.svg", label: "message" },
+    { src: "assets/icons/social/facebook.svg", label: "facebook" },
+    { src: "assets/icons/social/x-twitter.svg", label: "x" },
+    { src: "assets/icons/social/instagram.svg", label: "instagram" },
+    { src: "assets/icons/social/whatsapp.svg", label: "whatsapp" }
+  ]);
+
+  renderIconGrid("brand-gallery", [
+    { src: "assets/logo-lockup.svg", label: "logo-lockup" },
+    { src: "assets/logo-lockup-v2.svg", label: "logo-lockup-v2" },
+    { src: "assets/logo-lockup-v3.svg", label: "logo-lockup-v3" },
+    { src: "assets/mark-paw-compass.svg", label: "mark-paw-compass" },
+    { src: "assets/mark-dog-face.svg", label: "mark-dog-face" },
+    { src: "assets/mark-single-color.svg", label: "mark-single-color" },
+    { src: "assets/favicon-paw.svg", label: "favicon-paw" }
+  ]);
+
+  renderLinks("guideline-pages", [
+    { name: "Core Palette", desc: "Paper, ink, and the three accent colors", href: "guidelines/colors-core.html", path: "guidelines/colors-core.html" },
+    { name: "Status Colors", desc: "Verified / unverified — the only two states that matter on the map", href: "guidelines/colors-status.html", path: "guidelines/colors-status.html" },
+    { name: "Stop-Type Colors", desc: "Marker colors for each stop type — used for dots, chips, pins", href: "guidelines/colors-stop-types.html", path: "guidelines/colors-stop-types.html" },
+    { name: "Display / Fraunces", desc: "Serif display — stop names, headings, wordmark", href: "guidelines/type-display.html", path: "guidelines/type-display.html" },
+    { name: "Body / Inter", desc: "Sans body — buttons, chip labels, popup notes, form copy", href: "guidelines/type-body.html", path: "guidelines/type-body.html" },
+    { name: "Mono / JetBrains Mono", desc: "Eyebrow labels, meta, badges, legend — the 'field notebook' voice", href: "guidelines/type-mono.html", path: "guidelines/type-mono.html" },
+    { name: "Spacing Scale", desc: "4–24px scale — tight, compact UI chrome", href: "guidelines/spacing-scale.html", path: "guidelines/spacing-scale.html" },
+    { name: "Corner Radii", desc: "Small, consistent radii — 2–5px, never pill-shaped", href: "guidelines/spacing-radii.html", path: "guidelines/spacing-radii.html" },
+    { name: "Shadows — Hard Offset", desc: "Flat-color offset shadows, zero blur, like a stamped card", href: "guidelines/brand-shadows.html", path: "guidelines/brand-shadows.html" },
+    { name: "Logo Lockup", desc: "Dog-face mark, favicon, and single-color variant", href: "guidelines/brand-logo.html", path: "guidelines/brand-logo.html" },
+    { name: "Icon Set", desc: "Hand-drawn-weight line icons", href: "guidelines/brand-icons.html", path: "guidelines/brand-icons.html" },
+    { name: "Icon Set — Utility", desc: "Near me, toy, and report-a-problem icons", href: "guidelines/brand-icons-utility.html", path: "guidelines/brand-icons-utility.html" },
+    { name: "Icon Set — Actions", desc: "Directions, verified, and unverified action icons", href: "guidelines/brand-icons-actions.html", path: "guidelines/brand-icons-actions.html" },
+    { name: "Social Sharing Icons", desc: "Share, copy-link, email, message, and platform glyphs", href: "guidelines/brand-social-icons.html", path: "guidelines/brand-social-icons.html" },
+    { name: "Avatar Set", desc: "Base dog-face avatars — sketched as an earned unlock (see note above)", href: "guidelines/brand-avatars.html", path: "guidelines/brand-avatars.html" },
+    { name: "Milestone Badge Icons", desc: "First stop, streak, explorer, and star-milestone badges", href: "guidelines/brand-badges.html", path: "guidelines/brand-badges.html" },
+    { name: "Map Background Treatment", desc: "OSM tiles desaturated + sepia-tinted to read as 'aged paper'", href: "guidelines/brand-map-filter.html", path: "guidelines/brand-map-filter.html" },
+    { name: "Night-Walk Map Filter", desc: "Dusk tile treatment — now live on index.html", href: "guidelines/brand-night-map-filter.html", path: "guidelines/brand-night-map-filter.html" },
+    { name: "Seasonal Map Filter", desc: "Winter/autumn tile treatments — now live on index.html", href: "guidelines/brand-seasonal-filter.html", path: "guidelines/brand-seasonal-filter.html" },
+    { name: "Map Empty / Loading States", desc: "No pins in view, GPS denied, offline — now live on index.html", href: "guidelines/brand-empty-states.html", path: "guidelines/brand-empty-states.html" },
+    { name: "Email Digest Copy", desc: "Sample weekly digest copy — now a real template + digest.gs", href: "guidelines/content-digest-email.html", path: "guidelines/content-digest-email.html" }
+  ]);
+
+  renderLinks("component-pages", [
+    { name: "Button", desc: "Default and primary variants, with icon", href: "components/core/button.card.html", path: "components/core/button.card.html" },
+    { name: "Chip & Badge", desc: "Filter chips (active/inactive) and status badges", href: "components/core/chip-badge.card.html", path: "components/core/chip-badge.card.html" },
+    { name: "Panel & MapPin", desc: "Filter/legend container, and the map marker dot in each state", href: "components/core/panel-mappin.card.html", path: "components/core/panel-mappin.card.html" },
+    { name: "PopupCard, Modal & Brand", desc: "Map-pin popup, suggest-a-stop dialog, and the topbar lockup", href: "components/core/popup-modal-brand.card.html", path: "components/core/popup-modal-brand.card.html" },
+    { name: "Toast", desc: "Success / error / info confirmation toast", href: "components/feedback/toast.card.html", path: "components/feedback/toast.card.html" }
+  ]);
+
+  renderLinks("mockup-pages", [
+    { name: "Dog Treat Trail Map", desc: "Full click-through recreation this whole implementation was built from", href: "ui_kits/map-app/index.html", path: "ui_kits/map-app/index.html" },
+    { name: "Onboarding (mockup)", desc: "Static version of onboarding.html", href: "ui_kits/map-app/onboarding.html", path: "ui_kits/map-app/onboarding.html" },
+    { name: "Neighborhood Collections (mockup)", desc: "Static version of neighborhoods.html", href: "ui_kits/map-app/neighborhoods.html", path: "ui_kits/map-app/neighborhoods.html" },
+    { name: "Stop Detail Page (mockup)", desc: "Static version of stop-detail.html", href: "ui_kits/map-app/stop-detail.html", path: "ui_kits/map-app/stop-detail.html" },
+    { name: "Profile & Leaderboard (mockup)", desc: "Static version of profile.html", href: "ui_kits/map-app/profile.html", path: "ui_kits/map-app/profile.html" },
+    { name: "Suggested Walks & Explore Mode (mockup)", desc: "Static version of routes.html", href: "ui_kits/map-app/routes.html", path: "ui_kits/map-app/routes.html" },
+    { name: "Moderation Queue (mockup)", desc: "Static version of moderation.html", href: "ui_kits/map-app/moderation.html", path: "ui_kits/map-app/moderation.html" },
+    { name: "Printable Trail Flier (mockup)", desc: "Static version of trail-flier.html", href: "ui_kits/map-app/trail-flier.html", path: "ui_kits/map-app/trail-flier.html" },
+    { name: "Mobile Frame", desc: "Onboarding shown inside an iOS device bezel — a preview shell, not a distinct feature", href: "ui_kits/map-app/mobile-frame.html", path: "ui_kits/map-app/mobile-frame.html" }
+  ]);
+
   renderLinks("reference-pages", [
-    { name: "Design system home", desc: "The Claude Design project's own thumbnail/index — components, tokens, guidelines.", href: "thumbnail.html", path: "thumbnail.html" },
-    { name: "Original map-app mockups", desc: "The static click-through prototypes these live pages were built from.", href: "ui_kits/map-app/index.html", path: "ui_kits/map-app/" }
+    { name: "Design system home", desc: "The Claude Design project's own thumbnail/index card", href: "thumbnail.html", path: "thumbnail.html" },
+    { name: "Uploaded snapshot — index.html", desc: "The user-provided updated build this design system was extracted from", href: "uploads/index.html", path: "uploads/index.html" },
+    { name: "Uploaded snapshot — columbus-dog-treat-trail.html", desc: "An earlier uploaded snapshot of the live site", href: "uploads/columbus-dog-treat-trail.html", path: "uploads/columbus-dog-treat-trail.html" },
+    { name: "Uploaded snapshot — email signature", desc: "The brand's email signature reference", href: "uploads/dog-treat-trail-email-signature.html", path: "uploads/dog-treat-trail-email-signature.html" }
+  ]);
+
+  renderLinks("internal-pages", [
+    { name: "Canvas.dc.html", desc: "Claude Design's own canvas-runtime loader — infrastructure, not site content", href: "Canvas.dc.html", path: "Canvas.dc.html" },
+    { name: "signup.html", desc: "A bundled Claude Design export artifact (self-contained page loader) — not a real \"signup\" feature despite the name", href: "signup.html", path: "signup.html" }
   ]);
 </script>
 
