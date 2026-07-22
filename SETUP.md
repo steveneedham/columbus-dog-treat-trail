@@ -473,3 +473,51 @@ pass rather than sprinkling him everywhere at once. Natural next spots
 if you want more: the other empty states (offline, GPS-denied), a
 loading state, or `neighborhoods.html`/`routes.html` when there's
 nothing to show yet.
+
+## 17. Optional: anonymous usage analytics (interest heatmap + popular stops)
+
+Two related, deliberately low-stakes signals, both off unless you wire
+them up, both handled by one endpoint ([`engagement.gs`](./engagement.gs))
+so there's one setup step instead of two:
+
+- **Interest pings** — a rounded (~110m) lat/lng, logged at most once
+  per visit, and *only* right after a visitor has already granted
+  location for something else ("Near me" or "Use my current location"
+  in Suggest-a-stop). Nothing else about the visitor is recorded — no
+  name, email, device info, or stop id — and this never pops its own
+  location prompt. Answers "which parts of Columbus is the map
+  actually being used from".
+- **Stop view counts** — a `view_count` bump the first time each
+  stop's popup opens in a visit. Answers "which stops get looked at
+  the most".
+
+### Setup
+
+1. In the same Apps Script project as `approval.gs`/`verify.gs`, add
+   [`engagement.gs`](./engagement.gs) as a new script file.
+2. Add a `view_count` column to `Stops` (any position — found by
+   header name, existing rows count as 0 until touched). You don't
+   need to create a `Pings` tab yourself — the script creates it the
+   first time a ping lands.
+3. Deploy `engagement.gs` as its own Web App (same Execute-as-Me,
+   Anyone-can-access pattern as `verify.gs`), and paste the deployment
+   URL into `CONFIG.ENGAGEMENT_URL` near the top of `index.html`.
+   Leave it blank and both features are silently skipped.
+
+### Exploring interest pings with kepler.gl
+
+1. Publish the `Pings` tab to the web as CSV, same steps as `Stops` in
+   section 1 (File > Share > Publish to web > pick the `Pings` tab >
+   CSV).
+2. Open [kepler.gl](https://kepler.gl/demo) (no account needed) and
+   either drag in a downloaded copy of that CSV, or add it by URL
+   under "Add Data".
+3. Kepler auto-detects the `lat`/`lng` columns — switch the layer type
+   to **Heatmap** to see where the map is getting the most use.
+
+### Popular stops
+
+`view_count` lives on the `Stops` tab like `verify_count`/
+`report_count` — sort or filter that column directly in Sheets to see
+what's getting looked at. Nothing in `index.html` reads or displays it
+today, so adding it doesn't change anything visitors see.

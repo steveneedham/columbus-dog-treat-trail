@@ -393,6 +393,19 @@
     // weekly email. Leave blank and it falls back to a prefilled
     // mailto so you can add people by hand. See SETUP.md.
     SUBSCRIBE_URL: "",
+    // Paste your engagement.gs Web App deployment URL here to log two
+    // kinds of anonymous, aggregate usage signal — never tied to a
+    // name/email, and never requested with a prompt of its own:
+    //   - an "interest" ping (rounded lat/lng, no other data) whenever
+    //     a visitor already grants location for "Near me" or "Use my
+    //     current location" — at most once per visit — so you can see
+    //     which areas people are using the map from.
+    //   - a view_count bump on a Stop when its popup opens, so you can
+    //     see which stops get looked at the most.
+    // Leave blank and both are silently skipped — no behavior change,
+    // no network calls. See SETUP.md for the Sheet columns/tab this
+    // needs and how to explore the resulting data (e.g. in kepler.gl).
+    ENGAGEMENT_URL: "",
     // v0.5: how often to re-pull the Sheet in the background, and the
     // minimum gap between any two fetches (including ones triggered by
     // panning the map) so it can't be hammered by fast movement.
@@ -638,6 +651,30 @@
     el._hideTimer = setTimeout(() => el.classList.remove("open"), 2600);
   }
 
+  // Anonymous, aggregate usage signal — see CONFIG.ENGAGEMENT_URL above
+  // for what this does and doesn't do. Both helpers are silent no-ops
+  // with no network call when ENGAGEMENT_URL is blank, and never throw
+  // or surface anything to the visitor — this must never get in the
+  // way of the feature it's piggybacking on.
+  let pingedThisSession = false;
+  function logInterestPing(lat, lng) {
+    if (!CONFIG.ENGAGEMENT_URL || pingedThisSession) return;
+    pingedThisSession = true;
+    fetch(CONFIG.ENGAGEMENT_URL, {
+      method: "POST",
+      body: new URLSearchParams({ action: "ping", lat: lat.toFixed(3), lng: lng.toFixed(3) })
+    }).catch(() => {});
+  }
+  const viewedThisSession = new Set();
+  function logStopView(id) {
+    if (!CONFIG.ENGAGEMENT_URL || viewedThisSession.has(String(id))) return;
+    viewedThisSession.add(String(id));
+    fetch(CONFIG.ENGAGEMENT_URL, {
+      method: "POST",
+      body: new URLSearchParams({ action: "view", id })
+    }).catch(() => {});
+  }
+
   // Social icon set for the share modal fallback — see
   // guidelines/brand-social-icons.html. Kept to generic share/copy/email/
   // message plus simplified outline platform glyphs, not official logos.
@@ -745,6 +782,7 @@
           .addTo(map)
           .bindPopup(popupHTML(stop));
         marker.on('popupopen', () => {
+          logStopView(stop.id);
           const shareBtn = document.querySelector(`[data-share="${stop.id}"]`);
           if (shareBtn) shareBtn.addEventListener('click', () => shareStop(stop));
 
@@ -945,6 +983,7 @@
     navigator.geolocation.getCurrentPosition(
       pos => {
         const coords = `${pos.coords.latitude.toFixed(6)},${pos.coords.longitude.toFixed(6)}`;
+        logInterestPing(pos.coords.latitude, pos.coords.longitude);
         if (CONFIG.FORM_URL && CONFIG.FORM_ENTRY_ADDRESS) {
           const url = new URL(CONFIG.FORM_URL);
           url.searchParams.set(`entry.${CONFIG.FORM_ENTRY_ADDRESS}`, coords);
@@ -974,6 +1013,7 @@
         L.circleMarker([latitude, longitude], {
           radius: 8, color: '#2B2A26', weight: 2, fillColor: '#B5502C', fillOpacity: 1
         }).addTo(map);
+        logInterestPing(latitude, longitude);
       },
       err => {
         // See guidelines/brand-empty-states.html — the "location access
