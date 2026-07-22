@@ -45,7 +45,7 @@
 <script src="assets/site.js"></script>
 <script>
   const SCREENS = [
-    { icon: CDTTSite.ICONS.toy.replace('icon', 'icon-lg'), title: "Find hidden stashes", body: "Treat stands, stick libraries, water bowls, and toy boxes — spotted by neighbors on their daily walks." },
+    { icon: `<img src="assets/mascot-scout.svg" alt="Scout" style="width:66px;height:72px;">`, badgeSize: 110, title: "Meet Scout", body: "He'll help you find hidden stashes — treat stands, stick libraries, water bowls, and toy boxes spotted by neighbors on their walks." },
     { icon: CDTTSite.ICONS.mapPin.replace('icon', 'icon-lg'), title: "Verified on foot", body: "Every stop starts unverified until someone walks it and confirms it’s really there." },
     { icon: CDTTSite.ICONS.verified.replace('icon', 'icon-lg'), title: "Help the trail grow", body: "Suggest a stop you've spotted, or mark one verified once you've checked it yourself." }
   ];
@@ -67,7 +67,7 @@
     const s = SCREENS[step];
     document.getElementById("screen").innerHTML = `
       <div class="step-body">
-        <div class="icon-badge">${s.icon}</div>
+        <div class="icon-badge" style="${s.badgeSize ? `width:${s.badgeSize}px;height:${s.badgeSize}px;` : ""}">${s.icon}</div>
         <div class="step-title">${s.title}</div>
         <div class="step-copy">${s.body}</div>
       </div>

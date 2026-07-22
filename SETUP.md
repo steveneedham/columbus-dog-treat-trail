@@ -429,3 +429,20 @@ back to a prefilled `mailto:` so you can add people by hand, same
 degradation pattern as everything else here. Real bulk email still has
 a `MailApp` daily send quota and no sender-reputation warmup, worth
 keeping in mind if this list grows well past a small neighborhood.
+
+## 16. Meet Scout
+
+`assets/mascot-scout.svg` is a new, more detailed illustrated mascot —
+distinct from the existing abstract paw-compass/dog-face marks, which
+stay as the logo/favicon system. Scout is a first-pass appearance,
+currently in exactly two spots:
+
+- `onboarding.html`'s first screen ("Meet Scout")
+- `index.html`'s "no stops in view" map banner ("Scout can't find any
+  stops here")
+
+Nowhere else references him yet — intentionally minimal for a first
+pass rather than sprinkling him everywhere at once. Natural next spots
+if you want more: the other empty states (offline, GPS-denied), a
+loading state, or `neighborhoods.html`/`routes.html` when there's
+nothing to show yet.

@@ -223,7 +223,7 @@
     background:var(--white); border:1.5px solid var(--ink); border-radius:4px;
     box-shadow:2px 2px 0 rgba(43,42,38,0.15); padding:10px 16px; text-align:center;
     font-family:'Inter',sans-serif; font-size:12px; color:var(--ink-soft);
-    display:none; max-width:260px;
+    display:none; max-width:280px;
   }
   .info-banner.show{ display:block; }
   .info-banner .mono-sub{
@@ -851,7 +851,12 @@
     const bounds = map.getBounds();
     const visibleCount = stops.filter(s => activeTypes.has(s.type) && bounds.contains([s.lat, s.lng])).length;
     if (stops.length && visibleCount === 0) {
-      setBanner(`No stops in view yet<span class="mono-sub">pan or zoom out to find one</span>`);
+      setBanner(`
+        <div style="display:flex;align-items:center;gap:10px;text-align:left;">
+          <img src="assets/mascot-scout.svg" alt="Scout" style="width:34px;height:37px;flex-shrink:0;">
+          <div>Scout can't find any stops here<span class="mono-sub">pan or zoom out to find one</span></div>
+        </div>
+      `);
     } else {
       setBanner(null);
     }
