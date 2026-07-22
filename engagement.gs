@@ -11,16 +11,25 @@
  * in one file/one deployment so wiring this up is one setup step
  * instead of two:
  *
- *   action=ping  — index.html calls this at most once per visit, only
- *   after a visitor has already granted location for something else
- *   ("Near me" or "Use my current location" in Suggest-a-stop) — this
- *   endpoint never triggers a location prompt itself. Appends one row
- *   (timestamp, lat, lng) to a "Pings" tab. lat/lng arrive already
- *   rounded to 3 decimal places (~110m) by index.html, and nothing
- *   else is recorded — no name, no email, no device/browser info, no
- *   stop id — so a row can't be tied back to a person or a precise
- *   address. This is meant to answer "which areas is the map being
- *   used from", not "where does person X live".
+ *   action=ping  — appends one row (timestamp, lat, lng, source) to a
+ *   "Pings" tab. lat/lng arrive already rounded to 3 decimal places
+ *   (~110m), and nothing else is recorded — no name, no email, no
+ *   device/browser info, no stop id — so a row can't be tied back to
+ *   a person or a precise address. Two callers, distinguished by the
+ *   `source` column:
+ *     - index.html ("source=map") — at most once per visit, only
+ *       after a visitor has already granted location for something
+ *       else ("Near me" or "Use my current location" in Suggest-a-
+ *       stop). Never triggers a location prompt of its own. Answers
+ *       "which areas is the map being used from".
+ *     - promo.html ("source=promo") — once, when a business owner
+ *       taps through the first screen of the QR-landing wizard. This
+ *       IS a location prompt of its own there — there's no other
+ *       feature on that page to piggyback on, so the browser's native
+ *       permission dialog is the consent. Answers "where are these QR
+ *       codes actually getting scanned", and also lets promo.html
+ *       auto-suggest the nearest neighborhood in its form.
+ *   `source` defaults to "map" if the caller omits it.
  *
  *   action=view  — index.html calls this once per stop per visit, the
  *   first time that stop's map popup opens. Increments a `view_count`
@@ -37,8 +46,9 @@
  *  4. Deploy > New deployment > Web app > Execute as: Me, Who has
  *     access: Anyone. Copy the deployment URL.
  *  5. Paste that URL into CONFIG.ENGAGEMENT_URL near the top of
- *     index.html. Leave it blank and both features are silently
- *     skipped — no behavior change, no network calls.
+ *     index.html AND promo.html. Leave it blank on either and that
+ *     page's features are silently skipped — no behavior change, no
+ *     network calls.
  *
  * EXPLORING THE DATA — see SETUP.md for the full walkthrough, but in
  * short: publish the Pings tab to the web as CSV the same way as the
@@ -65,14 +75,15 @@ function logPing_(e, out) {
   var lat = Number(e.parameter.lat);
   var lng = Number(e.parameter.lng);
   if (!isFinite(lat) || !isFinite(lng)) throw new Error('Missing or invalid lat/lng');
+  var source = e.parameter.source || 'map';
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Pings');
   if (!sheet) {
     sheet = ss.insertSheet('Pings');
-    sheet.appendRow(['timestamp', 'lat', 'lng']);
+    sheet.appendRow(['timestamp', 'lat', 'lng', 'source']);
   }
-  sheet.appendRow([new Date(), lat, lng]);
+  sheet.appendRow([new Date(), lat, lng, source]);
 
   out.setContent(JSON.stringify({ ok: true }));
   return out;

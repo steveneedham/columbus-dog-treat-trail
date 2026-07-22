@@ -548,6 +548,33 @@ The preview step doesn't publish anything — turning a submission into
 a real sponsored pin is still the same manual step as section 6
 (you add/edit a row in `Stops` with `sponsored` set).
 
+### Capturing where the QR code gets scanned
+
+Tapping past the first screen ("Design my promo →") asks for the
+visitor's location — the one deliberate exception to this whole
+site's "never request location just for tracking" rule, because
+`promo.html` has no other feature to piggyback a prompt on the way
+index.html's pings do (see section 17). The browser's own permission
+dialog is the consent, and there's a one-line note above the button
+explaining why before it fires.
+
+If granted, two things happen, both using the same `engagement.gs`
+from section 17 (paste the same deployment URL into
+`CONFIG.ENGAGEMENT_URL` near the top of `promo.html`, blank = both
+skipped):
+
+- An anonymous, rounded (~110m) location ping logs to the `Pings` tab
+  tagged `source=promo`, so you can tell QR scans apart from map
+  "near me" pings (`source=map`) when you pull it into kepler.gl.
+- The wizard auto-fills the "nearest neighborhood" field by comparing
+  the visitor's position against every loaded stop (only if something
+  is within ~2 miles — otherwise it leaves the field for them to fill
+  in, rather than guessing).
+
+Declining the prompt, or `ENGAGEMENT_URL` being blank, doesn't block
+anything — the wizard advances immediately either way and the
+neighborhood field just stays manual.
+
 ### Generating a QR code for it
 
 Once the site's deployed, any QR generator pointed at

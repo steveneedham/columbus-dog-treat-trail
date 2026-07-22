@@ -662,7 +662,7 @@
     pingedThisSession = true;
     fetch(CONFIG.ENGAGEMENT_URL, {
       method: "POST",
-      body: new URLSearchParams({ action: "ping", lat: lat.toFixed(3), lng: lng.toFixed(3) })
+      body: new URLSearchParams({ action: "ping", source: "map", lat: lat.toFixed(3), lng: lng.toFixed(3) })
     }).catch(() => {});
   }
   const viewedThisSession = new Set();

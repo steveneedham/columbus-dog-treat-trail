@@ -94,7 +94,17 @@
      moment it's deployed with no extra setup. See SETUP.md.
      ========================================================= */
   const CONFIG = {
-    PROMO_FORM_URL: ""
+    PROMO_FORM_URL: "",
+    // Paste your engagement.gs Web App deployment URL here (same one
+    // index.html's CONFIG.ENGAGEMENT_URL points at) to log an
+    // anonymous location ping — rounded to ~110m, tagged source=promo
+    // so it's distinguishable in the Pings tab from index.html's
+    // "source=map" pings — the moment someone taps past this page's
+    // first screen. Unlike index.html, this page has no other feature
+    // to piggyback a location prompt on, so this one prompt IS the
+    // consent (the browser's native permission dialog). Leave it
+    // blank and location is never requested at all. See SETUP.md.
+    ENGAGEMENT_URL: ""
   };
 
   const OFFER_TYPES = [
@@ -124,12 +134,62 @@
   };
 
   let neighborhoods = [];
+  let stopsCache = [];
   CDTT.loadStops().then(stops => {
+    stopsCache = stops;
     neighborhoods = [...new Set(stops.map(s => s.neighborhood).filter(Boolean))].sort();
   }).catch(() => { /* stub still works with a free-text fallback below */ });
 
   function dots(total, active) {
     return `<div class="dots">${Array.from({ length: total }, (_, i) => `<span class="${i === active ? "active" : ""}"></span>`).join("")}</div>`;
+  }
+
+  // Location capture — see CONFIG.ENGAGEMENT_URL above. Fired once,
+  // when someone taps past the hero screen (the flow's first real
+  // signal of intent, rather than the instant the page loads). Never
+  // blocks the step transition: the wizard advances immediately, and
+  // if/when a position comes back, it (a) logs an anonymous ping and
+  // (b) backfills the neighborhood field if it's still empty and the
+  // person hasn't scrolled past it yet.
+  let qrPingedThisSession = false;
+  function logQrScanPing(lat, lng) {
+    if (!CONFIG.ENGAGEMENT_URL || qrPingedThisSession) return;
+    qrPingedThisSession = true;
+    fetch(CONFIG.ENGAGEMENT_URL, {
+      method: "POST",
+      body: new URLSearchParams({ action: "ping", source: "promo", lat: lat.toFixed(3), lng: lng.toFixed(3) })
+    }).catch(() => {});
+  }
+
+  function findNearestNeighborhood(lat, lng) {
+    let best = null, bestMiles = Infinity;
+    stopsCache.forEach(s => {
+      if (!s.neighborhood) return;
+      const miles = CDTT.distanceMiles({ lat, lng }, s);
+      if (miles < bestMiles) { bestMiles = miles; best = s.neighborhood; }
+    });
+    return bestMiles <= 2 ? best : null; // don't guess if nothing's actually nearby
+  }
+
+  function requestLocationAndAdvance() {
+    state.step = 1;
+    render();
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude, longitude } = pos.coords;
+        logQrScanPing(latitude, longitude);
+        if (!state.neighborhood) {
+          const nearest = findNearestNeighborhood(latitude, longitude);
+          if (nearest) {
+            state.neighborhood = nearest;
+            if (state.step === 1) render();
+          }
+        }
+      },
+      () => { /* denied/unavailable — the form still works manually */ },
+      { timeout: 6000, enableHighAccuracy: true }
+    );
   }
 
   function renderStep0() {
@@ -145,6 +205,7 @@
         </div>
         ${dots(4, 0)}
         <button class="btn primary" id="step-next" style="width:100%; justify-content:center;">Design my promo →</button>
+        <div class="footer-note">We'll ask for your location to suggest the nearest neighborhood — you can skip that prompt and pick it yourself.</div>
       </div>
     `;
   }
@@ -305,6 +366,7 @@
 
     const nextBtn = document.getElementById("step-next");
     if (nextBtn) nextBtn.addEventListener("click", () => {
+      if (state.step === 0) { requestLocationAndAdvance(); return; }
       if (state.step === 1) readStep1Inputs();
       if (state.step === 2) readStep2Inputs();
       state.step += 1;
