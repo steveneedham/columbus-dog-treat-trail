@@ -1,32 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- ears: cream, same tone as the head, long floppy paddles hanging past the jaw -->
-  <path d="M68,58 C40,65 20,100 30,135 C36,150 55,155 65,140 C72,128 68,95 68,75 Z"
-        fill="#F7F4EC" stroke="#2B2A26" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M132,58 C160,65 180,100 170,135 C164,150 145,155 135,140 C128,128 132,95 132,75 Z"
-        fill="#F7F4EC" stroke="#2B2A26" stroke-width="5" stroke-linejoin="round"/>
-  <!-- alert/happy motion lines -->
-  <path d="M150,58 L165,48" stroke="#2B2A26" stroke-width="3" stroke-linecap="round"/>
-  <path d="M156,67 L172,60" stroke="#2B2A26" stroke-width="3" stroke-linecap="round"/>
-  <path d="M148,73 L162,68" stroke="#2B2A26" stroke-width="3" stroke-linecap="round"/>
+  <!-- ears: cream, same tone as the head, big rounded floppy shapes with a soft curled tip -->
+  <path d="M66,55 C40,58 18,85 20,120 C21,140 35,155 52,150 C62,147 60,130 58,115 C57,100 60,75 66,55 Z"
+        fill="#F7F4EC" stroke="#2B2A26" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M134,55 C160,58 182,85 180,120 C179,140 165,155 148,150 C138,147 140,130 142,115 C143,100 140,75 134,55 Z"
+        fill="#F7F4EC" stroke="#2B2A26" stroke-width="6" stroke-linejoin="round"/>
+  <!-- happy motion lines -->
+  <path d="M152,45 L168,33" stroke="#2B2A26" stroke-width="4" stroke-linecap="round"/>
+  <path d="M162,53 L180,44" stroke="#2B2A26" stroke-width="4" stroke-linecap="round"/>
+  <path d="M150,63 L166,57" stroke="#2B2A26" stroke-width="4" stroke-linecap="round"/>
   <!-- head -->
-  <circle cx="100" cy="95" r="55" fill="#F7F4EC" stroke="#2B2A26" stroke-width="5"/>
+  <circle cx="100" cy="100" r="52" fill="#F7F4EC" stroke="#2B2A26" stroke-width="6"/>
   <!-- eyes -->
-  <circle cx="80" cy="90" r="6" fill="#2B2A26"/>
-  <circle cx="120" cy="90" r="6" fill="#2B2A26"/>
+  <circle cx="82" cy="95" r="6.5" fill="#2B2A26"/>
+  <circle cx="118" cy="95" r="6.5" fill="#2B2A26"/>
   <!-- nose -->
-  <ellipse cx="100" cy="112" rx="9" ry="7" fill="#2B2A26"/>
-  <!-- open happy mouth -->
-  <path d="M80,120 Q100,133 120,120" fill="none" stroke="#2B2A26" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="100" cy="114" rx="9" ry="7" fill="#2B2A26"/>
+  <!-- subtle smile -->
+  <path d="M90,126 Q100,132 110,126" fill="none" stroke="#2B2A26" stroke-width="3" stroke-linecap="round"/>
   <!-- tongue -->
-  <path d="M92,122 Q100,142 108,122 Z" fill="#B5502C"/>
-  <!-- bandana band -->
-  <path d="M55,145 Q100,170 145,145 L138,158 Q100,178 62,158 Z"
-        fill="#B5502C" stroke="#2B2A26" stroke-width="4" stroke-linejoin="round"/>
-  <!-- bandana knot flap -->
-  <path d="M89,160 L111,160 L100,183 Z" fill="#B5502C" stroke="#2B2A26" stroke-width="4" stroke-linejoin="round"/>
-  <!-- paw print on the flap -->
-  <ellipse cx="100" cy="174" rx="5" ry="6" fill="#FBF9F3"/>
-  <circle cx="93" cy="166" r="2.4" fill="#FBF9F3"/>
-  <circle cx="100" cy="163" r="2.4" fill="#FBF9F3"/>
-  <circle cx="107" cy="166" r="2.4" fill="#FBF9F3"/>
+  <path d="M94,127 Q100,148 106,127 Z" fill="#B5502C"/>
+  <!-- bandana: single flag shape with curved top hugging the neck -->
+  <path d="M58,142 Q100,158 142,142 L100,190 Z"
+        fill="#B5502C" stroke="#2B2A26" stroke-width="5" stroke-linejoin="round"/>
+  <!-- paw print on the bandana -->
+  <ellipse cx="100" cy="172" rx="7" ry="8" fill="#FBF9F3"/>
+  <circle cx="88" cy="160" r="3.5" fill="#FBF9F3"/>
+  <circle cx="100" cy="155" r="3.8" fill="#FBF9F3"/>
+  <circle cx="112" cy="160" r="3.5" fill="#FBF9F3"/>
 </svg>
