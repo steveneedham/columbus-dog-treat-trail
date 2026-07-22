@@ -152,6 +152,7 @@
   .pop-name{ font-family:'Fraunces',serif; font-weight:600; font-size:16px; margin:0 0 4px; }
   .pop-meta{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); margin-bottom:8px; }
   .pop-notes{ font-size:12.5px; color:var(--ink); margin-bottom:10px; line-height:1.5; }
+  .pop-counts{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); margin:-4px 0 10px; }
   .pop-actions{ display:flex; gap:6px; flex-wrap:wrap; }
   .pop-btn{
     font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700;
@@ -161,9 +162,12 @@
   }
   .pop-btn.confirm{ background:var(--moss); color:var(--white); border-color:var(--moss); }
   .pop-btn.confirm:hover{ background:#3B5540; }
+  .pop-btn.upvote{ color:var(--moss); border-color:var(--moss); }
+  .pop-btn.upvote:hover{ background:var(--moss); color:var(--white); }
   .pop-btn.report{ color:var(--amber); border-color:var(--amber); }
   .pop-btn.report:hover{ background:var(--amber); color:var(--white); }
   .pop-btn:hover{ background:var(--ink); color:var(--white); }
+  .pop-btn[disabled]{ opacity:0.55; cursor:default; pointer-events:none; }
   .pop-btn .icon{ width:11px; height:11px; }
   .sponsored-star{
     position:absolute; top:-6px; right:-6px; font-size:9px; line-height:1; background:var(--amber);
@@ -340,6 +344,17 @@
     // "Mark verified" persist to the Stops sheet. Leave blank and the
     // button falls back to a local-only preview (old v0.1 behavior).
     VERIFY_URL: "https://script.google.com/macros/s/AKfycbxWaFYWmJz6ZRRcCgIgdrftCR03EfJUSZCbSI1q-pcPfW7r38V2LVj-qBs0gtRuRT75/exec",
+    // Paste your report.gs Web App deployment URL here to make "Report"
+    // persist to the Stops sheet (report_count column) and, once enough
+    // independent reports land, auto-flip the stop back to unverified.
+    // Leave blank and Report falls back to a local-only preview, same
+    // pattern as VERIFY_URL. See SETUP.md.
+    REPORT_URL: "",
+    // How many reports it takes to flip a verified stop back to
+    // unverified — deliberately more than one, so a single visitor can't
+    // un-verify something alone (report.gs also only counts one report
+    // per stop per Google Sheet row edit, not per click).
+    REPORT_FADE_THRESHOLD: 3,
     // v0.5: how often to re-pull the Sheet in the background, and the
     // minimum gap between any two fetches (including ones triggered by
     // panning the map) so it can't be hammered by fast movement.
@@ -375,7 +390,9 @@
       submitted_by: "Steven",
       date_added: "2026-07-16",
       venue: "",
-      photo_url: ""
+      photo_url: "",
+      verify_count: 0,
+      report_count: 0
     }
   ];
 
@@ -410,7 +427,12 @@
         // "commercial layer" (sponsored/featured pins). Absent column
         // means false for every existing sheet, so this is backward
         // compatible with the current schema.
-        sponsored: /^(y|yes|true|1)$/i.test((row.sponsored || "").trim())
+        sponsored: /^(y|yes|true|1)$/i.test((row.sponsored || "").trim()),
+        // Optional columns, see SETUP.md — how many people have
+        // reconfirmed vs. flagged a problem with this stop. Absent
+        // columns parse to 0, same backward-compatible pattern.
+        verify_count: parseInt(row.verify_count, 10) || 0,
+        report_count: parseInt(row.report_count, 10) || 0
       }))
       .filter(s => s.name && Number.isFinite(s.lat) && Number.isFinite(s.lng) && TYPE_META_KEYS.includes(s.type));
   }
@@ -527,15 +549,21 @@
   let activeTypes = new Set(Object.keys(TYPE_META));
   let markers = [];
 
-  function makeIcon(type, status, sponsored) {
+  function makeIcon(type, status, sponsored, reportCount) {
     const color = TYPE_META[type]?.color || "#B5502C";
     const ring = isVerified(status) ? "#4C6B4F" : "#C68A2E";
     const borderStyle = isSeasonal(status) ? "dashed" : "solid";
     const outline = sponsored ? "outline:2px solid #C68A2E; outline-offset:2px;" : "";
     const star = sponsored ? `<span class="sponsored-star">★</span>` : "";
+    // Pins fade toward transparent as unresolved reports pile up, so a
+    // stop under a cloud reads as fading away rather than just quietly
+    // flipping status once REPORT_FADE_THRESHOLD is reached.
+    const opacity = reportCount > 0
+      ? Math.max(0.35, 1 - reportCount / CONFIG.REPORT_FADE_THRESHOLD)
+      : 1;
     return L.divIcon({
       className: '',
-      html: `<div style="position:relative;width:22px;height:22px;">
+      html: `<div style="position:relative;width:22px;height:22px;opacity:${opacity};">
         <div style="
           width:22px;height:22px;border-radius:50%;
           background:${color}; border:3px ${borderStyle} ${ring}; ${outline}
@@ -617,23 +645,42 @@
     openShareModal(stop);
   }
 
+  // Per-browser guard so one visitor can't rack up multiple reports on
+  // the same stop just by reopening its popup — report.gs also counts
+  // one report per edit, but this stops it at the client too.
+  function getReportedIds() {
+    try { return new Set(JSON.parse(localStorage.getItem("cdtt_reported_ids") || "[]")); }
+    catch (err) { return new Set(); }
+  }
+  function markReported(id) {
+    const ids = getReportedIds();
+    ids.add(String(id));
+    try { localStorage.setItem("cdtt_reported_ids", JSON.stringify([...ids])); } catch (err) { /* ignore */ }
+  }
+
   function popupHTML(stop) {
     const meta = TYPE_META[stop.type] || { label: stop.type };
-    const badge = isVerified(stop.status)
+    const verified = isVerified(stop.status);
+    const badge = verified
       ? '<span class="badge verified">Verified</span>'
       : '<span class="badge unverified">Unverified</span>';
     const seasonalTag = isSeasonal(stop.status) ? ' · <span class="badge unverified" style="background:var(--ink-soft)">Seasonal</span>' : '';
+    const alreadyReported = getReportedIds().has(String(stop.id));
+    const countsLine = (stop.verify_count > 0 || stop.report_count > 0)
+      ? `<div class="pop-counts">${stop.verify_count > 0 ? `✓ confirmed ${stop.verify_count}×` : ""}${stop.verify_count > 0 && stop.report_count > 0 ? " · " : ""}${stop.report_count > 0 ? `⚠ flagged ${stop.report_count}×` : ""}</div>`
+      : "";
     return `
       <div class="pop-name">${stop.name}${stop.sponsored ? " ★" : ""}</div>
       ${stop.photo_url ? `<img class="pop-photo" src="${stop.photo_url}" alt="${stop.name}" loading="lazy" onerror="this.remove()">` : ""}
       <div class="pop-meta">${meta.label} · ${stop.neighborhood} · ${badge}${seasonalTag}</div>
       ${stop.venue ? `<div class="pop-venue">${stop.venue}</div>` : ""}
       <div class="pop-notes">${stop.notes || ""}</div>
+      ${countsLine}
       <div class="pop-actions">
         <a class="pop-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}">${ICON_DIRECTIONS} Directions</a>
         <button class="pop-btn" data-share="${stop.id}">${ICON_SHARE} Share</button>
-        ${!isVerified(stop.status) ? `<button class="pop-btn confirm" data-confirm="${stop.id}">Mark verified</button>` : ""}
-        <a class="pop-btn report" href="mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20Report%20a%20problem&body=Stop%3A%20${encodeURIComponent(stop.name)}%20(id%20${stop.id})%0AProblem%3A%0A">${ICON_REPORT} Report</a>
+        <button class="pop-btn ${verified ? "upvote" : "confirm"}" data-confirm="${stop.id}">${verified ? "Still here ✓" : "Mark verified"}</button>
+        <button class="pop-btn report" data-report="${stop.id}" ${alreadyReported ? "disabled" : ""}>${ICON_REPORT} ${alreadyReported ? "Reported" : "Report"}</button>
       </div>
     `;
   }
@@ -644,23 +691,29 @@
     stops
       .filter(s => activeTypes.has(s.type))
       .forEach(stop => {
-        const marker = L.marker([stop.lat, stop.lng], { icon: makeIcon(stop.type, stop.status, stop.sponsored) })
+        const marker = L.marker([stop.lat, stop.lng], { icon: makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count) })
           .addTo(map)
           .bindPopup(popupHTML(stop));
         marker.on('popupopen', () => {
           const shareBtn = document.querySelector(`[data-share="${stop.id}"]`);
           if (shareBtn) shareBtn.addEventListener('click', () => shareStop(stop));
+
           const btn = document.querySelector(`[data-confirm="${stop.id}"]`);
           if (btn) {
             btn.addEventListener('click', async () => {
+              const wasVerified = isVerified(stop.status);
               if (!CONFIG.VERIFY_URL) {
                 // No write-back endpoint configured — same behavior as
                 // v0.1: local-only preview, and you flip `status` by
                 // hand in Stops to make it stick.
-                stop.status = isSeasonal(stop.status) ? "seasonal-verified" : "verified";
-                marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored));
+                if (!wasVerified) stop.status = isSeasonal(stop.status) ? "seasonal-verified" : "verified";
+                stop.verify_count = (stop.verify_count || 0) + 1;
+                stop.report_count = 0; // reconfirming outweighs prior flags
+                marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count));
                 marker.setPopupContent(popupHTML(stop));
-                showToast(`${stop.name} marked verified (local preview only).`);
+                showToast(wasVerified
+                  ? `Thanks for confirming ${stop.name} is still there!`
+                  : `${stop.name} marked verified (local preview only).`);
                 return;
               }
               btn.disabled = true;
@@ -672,22 +725,69 @@
                 });
                 const result = await res.json();
                 if (result.ok) {
-                  if (result.changed) {
-                    stop.status = result.status;
-                    pendingVerify.set(String(stop.id), Date.now());
-                  }
-                  marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored));
+                  stop.status = result.status;
+                  if (result.verify_count != null) stop.verify_count = result.verify_count;
+                  stop.report_count = 0; // server clears this on any successful verify/upvote
+                  pendingVerify.set(String(stop.id), Date.now());
+                  marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count));
                   marker.setPopupContent(popupHTML(stop));
-                  if (result.changed) showToast(`${stop.name} marked verified — thanks for checking it on foot!`);
+                  showToast(result.changed
+                    ? `${stop.name} marked verified — thanks for checking it on foot!`
+                    : `Thanks for confirming ${stop.name} is still there!`);
                 } else {
                   showToast("Couldn't save that — try again in a bit.", "error");
                   btn.disabled = false;
-                  btn.textContent = "Mark verified";
+                  btn.textContent = wasVerified ? "Still here ✓" : "Mark verified";
                 }
               } catch (err) {
                 showToast("Network error — try again.", "error");
                 btn.disabled = false;
-                btn.textContent = "Mark verified";
+                btn.textContent = wasVerified ? "Still here ✓" : "Mark verified";
+              }
+            });
+          }
+
+          const reportBtn = document.querySelector(`[data-report="${stop.id}"]`);
+          if (reportBtn && !reportBtn.disabled) {
+            reportBtn.addEventListener('click', async () => {
+              if (!CONFIG.REPORT_URL) {
+                // No write-back endpoint configured — fall back to
+                // emailing the maintainer directly, same as the old
+                // mailto-only Report link.
+                window.location.href = `mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20Report%20a%20problem&body=Stop%3A%20${encodeURIComponent(stop.name)}%20(id%20${stop.id})%0AProblem%3A%0A`;
+                stop.report_count = (stop.report_count || 0) + 1;
+                markReported(stop.id);
+                marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count));
+                marker.setPopupContent(popupHTML(stop));
+                return;
+              }
+              reportBtn.disabled = true;
+              reportBtn.textContent = "Saving...";
+              try {
+                const res = await fetch(CONFIG.REPORT_URL, {
+                  method: "POST",
+                  body: new URLSearchParams({ id: stop.id })
+                });
+                const result = await res.json();
+                if (result.ok) {
+                  stop.report_count = result.report_count;
+                  if (result.changed) stop.status = result.status;
+                  pendingVerify.set(String(stop.id), Date.now());
+                  markReported(stop.id);
+                  marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count));
+                  marker.setPopupContent(popupHTML(stop));
+                  showToast(result.changed
+                    ? `${stop.name} flagged by enough people that it's back to unverified — thanks for looking out.`
+                    : "Thanks — flagged for a look.");
+                } else {
+                  showToast("Couldn't save that — try again in a bit.", "error");
+                  reportBtn.disabled = false;
+                  reportBtn.innerHTML = `${ICON_REPORT} Report`;
+                }
+              } catch (err) {
+                showToast("Network error — try again.", "error");
+                reportBtn.disabled = false;
+                reportBtn.innerHTML = `${ICON_REPORT} Report`;
               }
             });
           }
