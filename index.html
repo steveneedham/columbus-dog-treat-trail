@@ -161,6 +161,8 @@
   }
   .pop-btn.confirm{ background:var(--moss); color:var(--white); border-color:var(--moss); }
   .pop-btn.confirm:hover{ background:#3B5540; }
+  .pop-btn.report{ color:var(--amber); border-color:var(--amber); }
+  .pop-btn.report:hover{ background:var(--amber); color:var(--white); }
   .pop-btn:hover{ background:var(--ink); color:var(--white); }
   .pop-btn .icon{ width:11px; height:11px; }
   .sponsored-star{
@@ -631,7 +633,7 @@
         <a class="pop-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}">${ICON_DIRECTIONS} Directions</a>
         <button class="pop-btn" data-share="${stop.id}">${ICON_SHARE} Share</button>
         ${!isVerified(stop.status) ? `<button class="pop-btn confirm" data-confirm="${stop.id}">Mark verified</button>` : ""}
-        ${!isVerified(stop.status) ? `<a class="pop-btn" href="mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20Report%20a%20problem&body=Stop%3A%20${encodeURIComponent(stop.name)}%20(id%20${stop.id})%0AProblem%3A%0A">${ICON_REPORT} Report</a>` : ""}
+        <a class="pop-btn report" href="mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20Report%20a%20problem&body=Stop%3A%20${encodeURIComponent(stop.name)}%20(id%20${stop.id})%0AProblem%3A%0A">${ICON_REPORT} Report</a>
       </div>
     `;
   }

@@ -35,6 +35,8 @@ a{color:inherit;}
 .btn.primary{background:var(--rust);color:var(--white);border-color:var(--rust);}
 .btn.primary:hover{background:var(--rust-dark);border-color:var(--rust-dark);}
 .btn.small{padding:6px 10px;font-size:12px;}
+.btn.report{color:var(--amber);border-color:var(--amber);}
+.btn.report:hover{background:var(--amber);color:var(--white);}
 .btn[disabled]{opacity:0.55;cursor:default;pointer-events:none;}
 
 .nav-links{display:flex;gap:14px;flex-wrap:wrap;}
