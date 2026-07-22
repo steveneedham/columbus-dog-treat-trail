@@ -521,3 +521,35 @@ so there's one setup step instead of two:
 `report_count` — sort or filter that column directly in Sheets to see
 what's getting looked at. Nothing in `index.html` reads or displays it
 today, so adding it doesn't change anything visitors see.
+
+## 18. Optional: "Design your promo" (`promo.html`) — QR landing for businesses
+
+This is the README's "commercial layer" roadmap item (sponsored/
+featured pins — see section 6) made concrete as a real page: a QR
+code on a physical sign or flier at a stop can point here, and a
+business owner walks through a 4-step wizard (their info → the offer
+→ a live preview of what their sponsored pin/popup would look like →
+send it in) instead of you fielding it ad hoc by email or text.
+
+It's a stub in the honest sense — there's no real backend behind it
+yet, just like `FORM_URL` before section 2 was set up:
+
+- Leave `CONFIG.PROMO_FORM_URL` (near the top of `promo.html`'s
+  `<script>` block) blank and "Send it in" opens a prefilled `mailto:`
+  with everything they entered, same fallback pattern as the old
+  Suggest-a-stop flow.
+- If you later build a real Google Form for business sign-ups, paste
+  its link into `PROMO_FORM_URL` and that button opens it instead. It
+  doesn't prefill any fields yet the way `FORM_ENTRY_ADDRESS` does for
+  Suggest-a-stop — that'd need the same "Get pre-filled link" entry-ID
+  lookup per field if you want it, see section 2.
+
+The preview step doesn't publish anything — turning a submission into
+a real sponsored pin is still the same manual step as section 6
+(you add/edit a row in `Stops` with `sponsored` set).
+
+### Generating a QR code for it
+
+Once the site's deployed, any QR generator pointed at
+`https://steveneedham.github.io/columbus-dog-treat-trail/promo.html`
+works — there's nothing app-specific about the code itself.
