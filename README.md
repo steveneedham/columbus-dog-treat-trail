@@ -1,5 +1,7 @@
 # Columbus Dog Treat Trail — Design System
 
+![Scout, the Columbus Dog Treat Trail mascot](assets/scoutheaderart.png)
+
 ## What this is
 
 **Columbus Dog Treat Trail** is a crowdsourced, interactive map of little dog-treat stashes, stick libraries, water bowls, and toy boxes spotted on walks around Columbus, Ohio. It started after the site's creator noticed a cluster of biscuit stashes in German Village while dog walking, and is built as a companion to [Columbus PantryMap](https://github.com/steveneedham/columbus-pantry-map) — same "no build step, single static HTML file + a Google Sheet as the database" approach — but leaning "fun neighborhood find" rather than mutual aid.
