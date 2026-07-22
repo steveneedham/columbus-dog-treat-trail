@@ -1,0 +1,348 @@
+<!--
+  Columbus Dog Treat Trail — Design your promo
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design your promo — Columbus Dog Treat Trail</title>
+<script src="assets/analytics.js"></script>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  .hero-badge{
+    width:64px; height:64px; border-radius:50%; background:var(--white); border:2px solid var(--ink);
+    box-shadow:var(--shadow-md); display:flex; align-items:center; justify-content:center; font-size:26px;
+  }
+  .dots{display:flex; gap:6px; justify-content:center; margin:4px 0 2px;}
+  .dots span{height:7px; border-radius:4px; background:var(--line); width:7px; transition:all 0.15s ease;}
+  .dots span.active{width:18px; background:var(--rust);}
+
+  .field{display:flex; flex-direction:column; gap:5px; text-align:left;}
+  .field label{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:var(--tracking-wide); color:var(--ink-soft);}
+  .field input, .field select, .field textarea{
+    font-family:var(--font-body); font-size:14px; padding:10px 11px; border-radius:var(--radius-md);
+    border:var(--border-default) solid var(--ink); background:var(--white); color:var(--ink); resize:vertical;
+  }
+  .field textarea{min-height:70px;}
+
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px;}
+  .promo-chip{
+    font-family:var(--font-mono); font-size:11.5px; font-weight:600; padding:7px 12px; border-radius:999px;
+    border:1.5px solid var(--ink); background:var(--white); cursor:pointer; color:var(--ink);
+  }
+  .promo-chip.active{background:var(--ink); color:var(--white);}
+
+  .swatch-row{display:flex; gap:10px;}
+  .swatch{
+    width:30px; height:30px; border-radius:50%; border:2px solid var(--ink); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; color:var(--white); font-size:13px;
+  }
+  .swatch.active{outline:2px solid var(--ink); outline-offset:2px;}
+
+  .preview-pin{
+    width:26px; height:26px; border-radius:50%; border:2px solid var(--ink); flex-shrink:0; position:relative;
+  }
+  .preview-pin .star{
+    position:absolute; top:-6px; right:-6px; font-size:9px; line-height:1; background:var(--amber);
+    color:var(--white); border-radius:50%; width:13px; height:13px; display:flex; align-items:center;
+    justify-content:center; border:1px solid var(--ink);
+  }
+  .preview-card{display:flex; flex-direction:column; gap:8px;}
+  .preview-top{display:flex; align-items:center; gap:10px;}
+  .preview-name{font-family:var(--font-display); font-weight:600; font-size:16px;}
+  .preview-msg{font-size:13px; line-height:1.5; color:var(--ink);}
+  .sponsored-badge{
+    align-self:flex-start; font-family:var(--font-mono); font-size:9.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:var(--tracking-mid); background:var(--amber); color:var(--white); padding:2px 7px; border-radius:var(--radius-sm);
+  }
+
+  .step-actions{display:flex; flex-direction:column; gap:10px; margin-top:6px;}
+  .step-actions .row{display:flex; gap:10px;}
+  .step-actions .row .btn{flex:1; justify-content:center;}
+</style>
+</head>
+<body>
+
+<div class="page" style="max-width:420px;">
+  <div class="page-topbar">
+    <div id="brand"></div>
+    <a class="btn small" href="index.html">← Back to map</a>
+  </div>
+
+  <div id="wizard" class="panel"></div>
+
+  <div class="footer-note">Columbus Dog Treat Trail &middot; &copy; 2026 Steven Needham</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("Design your promo");
+
+  /* =========================================================
+     CONFIG
+     -----------------------------------------------------------
+     Optional: paste a Google Form shareable link here once you've
+     built one for business promo sign-ups (same idea as index.html's
+     FORM_URL for "Suggest a stop"). Leave it blank and "Send it in"
+     falls back to a prefilled mailto instead, so this page works the
+     moment it's deployed with no extra setup. See SETUP.md.
+     ========================================================= */
+  const CONFIG = {
+    PROMO_FORM_URL: ""
+  };
+
+  const OFFER_TYPES = [
+    "10% off for trail walkers",
+    "Buy one, get one free",
+    "Free item with purchase",
+    "Mention the Trail for a treat",
+    "Something else"
+  ];
+  const ACCENTS = [
+    { key: "rust", label: "Rust", value: "var(--rust)" },
+    { key: "moss", label: "Moss", value: "var(--moss)" },
+    { key: "water", label: "Water", value: "var(--water)" },
+    { key: "purple", label: "Purple", value: "var(--purple)" },
+    { key: "amber", label: "Amber", value: "var(--amber)" }
+  ];
+
+  const state = {
+    step: 0,
+    business: "",
+    category: "Pet store",
+    neighborhood: "",
+    email: "",
+    offerType: OFFER_TYPES[0],
+    message: "",
+    accent: "rust"
+  };
+
+  let neighborhoods = [];
+  CDTT.loadStops().then(stops => {
+    neighborhoods = [...new Set(stops.map(s => s.neighborhood).filter(Boolean))].sort();
+  }).catch(() => { /* stub still works with a free-text fallback below */ });
+
+  function dots(total, active) {
+    return `<div class="dots">${Array.from({ length: total }, (_, i) => `<span class="${i === active ? "active" : ""}"></span>`).join("")}</div>`;
+  }
+
+  function renderStep0() {
+    return `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; padding:6px 4px 2px;">
+        <div class="hero-badge">🐾</div>
+        <div>
+          <div style="font-family:var(--font-display); font-weight:700; font-size:21px; margin-bottom:8px;">Scanned this at a stop?</div>
+          <div style="font-size:13.5px; color:var(--ink-soft); line-height:1.55;">
+            If you're a pet-friendly business near the trail, you can sponsor a stop — a featured, amber-ringed pin with a star badge,
+            plus your own message in the popup every walker sees. Takes about a minute to put together.
+          </div>
+        </div>
+        ${dots(4, 0)}
+        <button class="btn primary" id="step-next" style="width:100%; justify-content:center;">Design my promo →</button>
+      </div>
+    `;
+  }
+
+  function renderStep1() {
+    const hoodOptions = neighborhoods.length
+      ? `<select id="f-neighborhood">
+           <option value="">Choose a neighborhood…</option>
+           ${neighborhoods.map(h => `<option value="${CDTT.escapeHtml(h)}" ${state.neighborhood === h ? "selected" : ""}>${CDTT.escapeHtml(h)}</option>`).join("")}
+           <option value="__other" ${state.neighborhood && !neighborhoods.includes(state.neighborhood) ? "selected" : ""}>Somewhere else…</option>
+         </select>`
+      : `<input id="f-neighborhood" type="text" placeholder="e.g. German Village" value="${CDTT.escapeHtml(state.neighborhood)}">`;
+    return `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="font-family:var(--font-display); font-weight:700; font-size:18px;">Your business</div>
+        <div class="field">
+          <label>Business name</label>
+          <input id="f-business" type="text" placeholder="e.g. Mutts &amp; Co." value="${CDTT.escapeHtml(state.business)}">
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <select id="f-category">
+            ${["Pet store", "Groomer", "Vet clinic", "Bakery / cafe", "Trainer", "Other"].map(c => `<option ${state.category === c ? "selected" : ""}>${c}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label>Nearest neighborhood</label>
+          ${hoodOptions}
+        </div>
+        <div class="field">
+          <label>Contact email</label>
+          <input id="f-email" type="email" placeholder="you@business.com" value="${CDTT.escapeHtml(state.email)}">
+        </div>
+        ${dots(4, 1)}
+        <div class="step-actions">
+          <div class="row">
+            <button class="btn" id="step-back">← Back</button>
+            <button class="btn primary" id="step-next">Next →</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStep2() {
+    return `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="font-family:var(--font-display); font-weight:700; font-size:18px;">Your promo</div>
+        <div class="field">
+          <label>Offer type</label>
+          <div class="chip-row" id="offer-chips">
+            ${OFFER_TYPES.map(o => `<div class="promo-chip ${state.offerType === o ? "active" : ""}" data-offer="${CDTT.escapeHtml(o)}">${o}</div>`).join("")}
+          </div>
+        </div>
+        <div class="field">
+          <label>Message walkers will see</label>
+          <textarea id="f-message" placeholder="e.g. Show this stop at checkout for 10% off treats and toys!">${CDTT.escapeHtml(state.message)}</textarea>
+        </div>
+        <div class="field">
+          <label>Pin color</label>
+          <div class="swatch-row" id="accent-swatches">
+            ${ACCENTS.map(a => `<div class="swatch ${state.accent === a.key ? "active" : ""}" data-accent="${a.key}" style="background:${a.value};" title="${a.label}"></div>`).join("")}
+          </div>
+        </div>
+        ${dots(4, 2)}
+        <div class="step-actions">
+          <div class="row">
+            <button class="btn" id="step-back">← Back</button>
+            <button class="btn primary" id="step-next">Preview →</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStep3() {
+    const accent = ACCENTS.find(a => a.key === state.accent) || ACCENTS[0];
+    const businessName = state.business || "Your Business";
+    const message = state.message || "Show this stop for a special offer!";
+    return `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="font-family:var(--font-display); font-weight:700; font-size:18px;">Preview</div>
+        <div class="panel preview-card" style="background:var(--paper-dark);">
+          <div class="preview-top">
+            <div class="preview-pin" style="background:${accent.value}; outline:2px solid var(--amber); outline-offset:2px;">
+              <span class="star">★</span>
+            </div>
+            <div class="preview-name">${CDTT.escapeHtml(businessName)}</div>
+          </div>
+          <div class="sponsored-badge">Sponsored</div>
+          <div class="preview-msg">${CDTT.escapeHtml(message)}</div>
+          <div class="meta-line">${CDTT.escapeHtml(state.category)}${state.neighborhood && state.neighborhood !== "__other" ? " · " + CDTT.escapeHtml(state.neighborhood) : ""}</div>
+        </div>
+        <div class="footer-note" style="text-align:left;">This is what your featured pin and popup could look like on the live map — nothing is published yet.</div>
+        ${dots(4, 3)}
+        <div class="step-actions">
+          <div class="row">
+            <button class="btn" id="step-back">← Back</button>
+            <button class="btn primary" id="step-submit">Send it in →</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStep4() {
+    return `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; padding:6px 4px 2px;">
+        <div class="hero-badge">✓</div>
+        <div style="font-family:var(--font-display); font-weight:700; font-size:19px;">Thanks!</div>
+        <div style="font-size:13.5px; color:var(--ink-soft); line-height:1.55;">
+          ${CONFIG.PROMO_FORM_URL
+            ? "Your promo details are on their way. We'll follow up at the email you gave us to get your pin live."
+            : "Your email app should have opened with everything filled in — just hit send and we'll follow up to get your pin live."}
+        </div>
+        <a class="btn primary" href="index.html" style="width:100%; justify-content:center;">Back to the map</a>
+      </div>
+    `;
+  }
+
+  function readStep1Inputs() {
+    state.business = document.getElementById("f-business").value.trim();
+    state.category = document.getElementById("f-category").value;
+    const hoodEl = document.getElementById("f-neighborhood");
+    state.neighborhood = hoodEl.value === "__other" ? "" : hoodEl.value.trim();
+    state.email = document.getElementById("f-email").value.trim();
+  }
+
+  function readStep2Inputs() {
+    state.message = document.getElementById("f-message").value.trim();
+  }
+
+  function submitPromo() {
+    if (CONFIG.PROMO_FORM_URL) {
+      const url = new URL(CONFIG.PROMO_FORM_URL);
+      window.open(url.toString(), "_blank", "noopener");
+    } else {
+      const accentLabel = (ACCENTS.find(a => a.key === state.accent) || ACCENTS[0]).label;
+      const body = [
+        `Business name: ${state.business}`,
+        `Category: ${state.category}`,
+        `Neighborhood: ${state.neighborhood}`,
+        `Contact email: ${state.email}`,
+        `Offer: ${state.offerType}`,
+        `Message: ${state.message}`,
+        `Pin color: ${accentLabel}`
+      ].join("\n");
+      window.location.href = `mailto:sjneedham@icloud.com?subject=${encodeURIComponent("Dog Treat Trail — Promo signup: " + (state.business || "New business"))}&body=${encodeURIComponent(body)}`;
+    }
+    state.step = 4;
+    render();
+  }
+
+  function render() {
+    const wizard = document.getElementById("wizard");
+    const renderers = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4];
+    wizard.innerHTML = renderers[state.step]();
+
+    const nextBtn = document.getElementById("step-next");
+    if (nextBtn) nextBtn.addEventListener("click", () => {
+      if (state.step === 1) readStep1Inputs();
+      if (state.step === 2) readStep2Inputs();
+      state.step += 1;
+      render();
+    });
+
+    const backBtn = document.getElementById("step-back");
+    if (backBtn) backBtn.addEventListener("click", () => {
+      if (state.step === 2) readStep2Inputs();
+      state.step -= 1;
+      render();
+    });
+
+    const submitBtn = document.getElementById("step-submit");
+    if (submitBtn) submitBtn.addEventListener("click", submitPromo);
+
+    const offerChips = document.getElementById("offer-chips");
+    if (offerChips) offerChips.querySelectorAll("[data-offer]").forEach(chip => {
+      chip.addEventListener("click", () => {
+        state.offerType = chip.dataset.offer;
+        readStep2Inputs();
+        render();
+      });
+    });
+
+    const swatches = document.getElementById("accent-swatches");
+    if (swatches) swatches.querySelectorAll("[data-accent]").forEach(sw => {
+      sw.addEventListener("click", () => {
+        state.accent = sw.dataset.accent;
+        readStep2Inputs();
+        render();
+      });
+    });
+  }
+
+  render();
+</script>
+
+<div class="build-stamp">Last updated 2026-07-22 04:20 UTC</div>
+</body>
+</html>
