@@ -58,7 +58,11 @@
         // "commercial layer" (sponsored/featured pins). Anything truthy
         // ("y"/"yes"/"true"/"1") turns it on; absent column = false for
         // every existing sheet, so this is fully backward compatible.
-        sponsored: /^(y|yes|true|1)$/i.test((row.sponsored || "").trim())
+        sponsored: /^(y|yes|true|1)$/i.test((row.sponsored || "").trim()),
+        // Optional columns, see SETUP.md — how many people have
+        // reconfirmed vs. flagged a problem with this stop.
+        verify_count: parseInt(row.verify_count, 10) || 0,
+        report_count: parseInt(row.report_count, 10) || 0
       }))
       .filter(s => s.name && Number.isFinite(s.lat) && Number.isFinite(s.lng) && TYPE_META_KEYS.includes(s.type));
   }

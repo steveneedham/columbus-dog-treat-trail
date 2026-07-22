@@ -349,3 +349,42 @@ in identity only lives in that one browser. To persist it:
 Read the security note at the top of `join.gs` — it trusts whatever
 the browser sends it, same honesty-over-security tradeoff as the
 rest of this no-login site's endpoints.
+
+## 13. Optional: reports that fade a pin back to unverified, and upvoting an already-verified stop
+
+Two related v0.6 changes to `index.html`'s map popup:
+
+- **Report** is no longer only for unverified stops — every stop has a
+  "Report" button now. As reports come in, the pin visibly fades
+  (opacity drops toward ~0.35) even before anything officially
+  changes; once `CONFIG.REPORT_FADE_THRESHOLD` (default 3) independent
+  reports land, a verified stop flips back to `unverified` so it goes
+  through the same on-foot confirmation loop as a new stop.
+- **"Mark verified"** now also works on already-verified stops —
+  relabeled "Still here ✓", it's an upvote: reconfirming a stop
+  increments `verify_count` and resets `report_count` to 0, since a
+  fresh reconfirmation outweighs stale reports.
+
+Both need two optional columns on `Stops`: `verify_count` and
+`report_count` (blank/missing = 0 for every existing row, fully
+backward compatible). Without them, both buttons still work in a
+"local preview only" mode (same graceful-degradation pattern as
+everywhere else) — they just don't persist across visitors.
+
+To make it real:
+
+1. Add `verify_count` and `report_count` columns to `Stops` (any
+   position — both endpoints find columns by header name).
+2. `verify.gs` already reads/writes both (redeploy it if you deployed
+   an older version before this change).
+3. Add [`report.gs`](./report.gs) as a new script file in the same
+   Apps Script project, deploy it as its own Web App (same
+   Execute-as-Me, Anyone-can-access pattern as `verify.gs`), and paste
+   the URL into `CONFIG.REPORT_URL` near the top of `index.html`.
+
+Read the security note at the top of `report.gs` first — flipping a
+stop backward from verified to unverified is a deliberate, narrow
+exception to `verify.gs`'s "only ever moves forward" rule, mitigated
+by requiring multiple independent reports (and a per-browser
+localStorage guard against one visitor reporting the same stop
+twice) rather than trusting any single report.
