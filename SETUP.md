@@ -92,6 +92,33 @@ to `Stops` by hand once you've walked them.
 4. Paste that URL into `CONFIG.FORM_URL` near the top of the
    `<script>` block in `index.html`.
 
+### Prefilling exact GPS coordinates (optional, recommended)
+
+The weakest link in the form above is the "Address or cross streets"
+question — it relies on someone typing a location from memory. The
+Suggest-a-stop modal has a **"Use my current location"** button that
+captures the visitor's exact GPS coordinates and, once wired up, drops
+them straight into that question instead:
+
+1. Open your live form → the **⋮** menu → **Get pre-filled link**.
+2. Fill in the "Address or cross streets" question with any placeholder
+   text (e.g. `test`), leave the rest blank, and click **Get link**.
+3. Copy the link it gives you and find `entry.<a long number>=test` in
+   the query string — that number is the entry ID for that question.
+4. Paste just the number into `CONFIG.FORM_ENTRY_ADDRESS` near
+   `CONFIG.FORM_URL` in `index.html`.
+
+With that set, clicking "Use my current location" rewrites the "Open
+the form" link to include `entry.<id>=<lat>,<lng>`, so the question
+arrives pre-answered with the device's coordinates. `approval.gs` (see
+step 3 below) recognizes that `lat,lng` shape and uses it directly
+instead of geocoding — a GPS fix is more accurate than anything
+geocoding can derive from typed text.
+
+Leave `FORM_ENTRY_ADDRESS` blank and the button still works: it
+captures the coordinates, copies them to the clipboard, and shows them
+on screen to paste in by hand.
+
 ### Your review workflow going forward
 
 1. Check the `Form Responses` tab periodically.

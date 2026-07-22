@@ -315,6 +315,8 @@
   <div class="modal">
     <h2>Suggest a stop</h2>
     <p id="modal-copy">Seen a treat stand, stick library, water bowl, or toy box on a walk? Tell us where — we'll verify it on foot before it goes live.</p>
+    <button class="btn" id="modal-locate-btn" type="button">📍 Use my current location</button>
+    <p id="modal-locate-status" style="font-size:12px; color:var(--ink-soft); margin:8px 0 16px; min-height:16px;"></p>
     <a class="btn primary" id="modal-cta" href="#" target="_blank" rel="noopener">Open the form →</a>
   </div>
 </div>
@@ -360,6 +362,17 @@
   const CONFIG = {
     SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRConYdz281L3B8jXoR6ocsHiHzox0rLsPauOPp3uTj9OWjNj2l1lHhGBp4X3Zo56LK0UaoXd4R5ulB/pub?gid=0&single=true&output=csv",
     FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSduyp92-tJt_xq7tdGpfLV-ERWM8hwAXQV95OAqqAdJn3SPNQ/viewform",
+    // Optional: the numeric entry ID for the form's "Address or cross
+    // streets" question (Form → ⋮ → Get pre-filled link → fill that
+    // field with a placeholder → Get link → copy the entry.NNNNNN
+    // number out of the resulting URL). When set, "Use my current
+    // location" in the Suggest-a-stop modal prefills that question with
+    // the visitor's exact GPS coordinates, which approval.gs uses
+    // directly instead of geocoding the typed address — more accurate
+    // than any address someone can type from memory. Leave blank and
+    // the button still captures + shows the coordinates to copy in by
+    // hand. See SETUP.md.
+    FORM_ENTRY_ADDRESS: "",
     // v0.5: paste your verify.gs Web App deployment URL here to make
     // "Mark verified" persist to the Stops sheet. Leave blank and the
     // button falls back to a local-only preview (old v0.1 behavior).
@@ -914,6 +927,42 @@
     modalCta.href = "mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20New%20Stop&body=Location%20(address%20or%20cross-streets)%3A%0AType%20(treat%20stand%20%2F%20stick%20library%20%2F%20water%20bowl%20%2F%20toy%20box)%3A%0ANotes%3A%0A";
     modalCta.textContent = "Email a stop →";
   }
+
+  // "Use my current location" — captures GPS in the Suggest-a-stop
+  // modal so the submission doesn't rely on someone typing an address
+  // or cross-streets from memory. When FORM_ENTRY_ADDRESS is set, the
+  // coordinates are prefilled straight into that form question (which
+  // approval.gs then uses directly instead of geocoding); otherwise
+  // they're copied to the clipboard so they can be pasted in by hand.
+  const locateModalBtn = document.getElementById('modal-locate-btn');
+  const locateStatus = document.getElementById('modal-locate-status');
+  locateModalBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      locateStatus.textContent = "Location isn't available in this browser.";
+      return;
+    }
+    locateStatus.textContent = "Finding you…";
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const coords = `${pos.coords.latitude.toFixed(6)},${pos.coords.longitude.toFixed(6)}`;
+        if (CONFIG.FORM_URL && CONFIG.FORM_ENTRY_ADDRESS) {
+          const url = new URL(CONFIG.FORM_URL);
+          url.searchParams.set(`entry.${CONFIG.FORM_ENTRY_ADDRESS}`, coords);
+          modalCta.href = url.toString();
+          locateStatus.textContent = `Location captured (${coords}) — added to the form.`;
+        } else {
+          if (navigator.clipboard) navigator.clipboard.writeText(coords).catch(() => {});
+          locateStatus.textContent = `Location captured: ${coords} (copied) — paste into the "Address or cross streets" question.`;
+        }
+      },
+      err => {
+        locateStatus.textContent = err.code === err.PERMISSION_DENIED
+          ? "Location permission denied — you can still fill in the address by hand."
+          : "Couldn't get your location — you can still fill in the address by hand.";
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
 
   // Near me
   document.getElementById('locate-btn').addEventListener('click', () => {
