@@ -193,6 +193,12 @@
   .modal h2{ font-family:'Fraunces',serif; font-size:19px; margin:0 0 6px; }
   .modal p{ font-size:13px; color:var(--ink-soft); line-height:1.5; margin:0 0 16px; }
   .modal .btn{ width:100%; justify-content:center; }
+  #subscribe-form{ display:flex; flex-direction:column; gap:10px; }
+  #subscribe-email{
+    font-family:'Inter',sans-serif; font-size:13px; padding:9px 10px;
+    border:1.5px solid var(--ink); border-radius:3px; background:var(--paper);
+  }
+  .subscribe-status{ font-size:13px; color:var(--ink-soft); text-align:center; }
 
   .footer{
     position:absolute; bottom:8px; right:12px; z-index:1000;
@@ -281,6 +287,7 @@
       <a href="profile.html">Profile</a>
       <a href="trail-flier.html">Flier</a>
       <a href="signup.html" id="member-link">Join the trail</a>
+      <a href="#" id="subscribe-link">Weekly updates</a>
     </div>
   </div>
 </div>
@@ -320,6 +327,19 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="subscribe-modal">
+  <div class="modal">
+    <h2>Weekly trail updates</h2>
+    <p>One short email a week when new stops get verified nearby — no spam, unsubscribe any time.</p>
+    <div id="subscribe-body">
+      <form id="subscribe-form">
+        <input type="email" id="subscribe-email" placeholder="you@example.com" required>
+        <button class="btn primary" type="submit" id="subscribe-submit">Subscribe</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
@@ -355,6 +375,11 @@
     // un-verify something alone (report.gs also only counts one report
     // per stop per Google Sheet row edit, not per click).
     REPORT_FADE_THRESHOLD: 3,
+    // Paste your subscribe.gs Web App deployment URL here to make the
+    // "Weekly updates" box really subscribe people to digest.gs's
+    // weekly email. Leave blank and it falls back to a prefilled
+    // mailto so you can add people by hand. See SETUP.md.
+    SUBSCRIBE_URL: "",
     // v0.5: how often to re-pull the Sheet in the background, and the
     // minimum gap between any two fetches (including ones triggered by
     // panning the map) so it can't be hammered by fast movement.
@@ -549,7 +574,17 @@
   let activeTypes = new Set(Object.keys(TYPE_META));
   let markers = [];
 
-  function makeIcon(type, status, sponsored, reportCount) {
+  // Popular spots (lots of "Still here" upvotes) render bigger — sqrt
+  // scaling so it's a gentle, capped curve rather than a handful of
+  // superfans blowing one pin up to dominate the whole map.
+  const PIN_BASE_SIZE = 22;
+  const PIN_MAX_SIZE = 34;
+  function pinSizeFor(verifyCount) {
+    const boost = Math.sqrt(verifyCount || 0) * 3;
+    return Math.round(Math.min(PIN_MAX_SIZE, PIN_BASE_SIZE + boost));
+  }
+
+  function makeIcon(type, status, sponsored, reportCount, verifyCount) {
     const color = TYPE_META[type]?.color || "#B5502C";
     const ring = isVerified(status) ? "#4C6B4F" : "#C68A2E";
     const borderStyle = isSeasonal(status) ? "dashed" : "solid";
@@ -561,17 +596,19 @@
     const opacity = reportCount > 0
       ? Math.max(0.35, 1 - reportCount / CONFIG.REPORT_FADE_THRESHOLD)
       : 1;
+    const size = pinSizeFor(verifyCount);
+    const half = size / 2;
     return L.divIcon({
       className: '',
-      html: `<div style="position:relative;width:22px;height:22px;opacity:${opacity};">
+      html: `<div style="position:relative;width:${size}px;height:${size}px;opacity:${opacity};">
         <div style="
-          width:22px;height:22px;border-radius:50%;
+          width:${size}px;height:${size}px;border-radius:50%;
           background:${color}; border:3px ${borderStyle} ${ring}; ${outline}
           box-shadow:1px 1px 0 rgba(43,42,38,0.3);
         "></div>${star}
       </div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 11]
+      iconSize: [size, size],
+      iconAnchor: [half, half]
     });
   }
 
@@ -691,7 +728,7 @@
     stops
       .filter(s => activeTypes.has(s.type))
       .forEach(stop => {
-        const marker = L.marker([stop.lat, stop.lng], { icon: makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count) })
+        const marker = L.marker([stop.lat, stop.lng], { icon: makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count, stop.verify_count) })
           .addTo(map)
           .bindPopup(popupHTML(stop));
         marker.on('popupopen', () => {
@@ -709,7 +746,7 @@
                 if (!wasVerified) stop.status = isSeasonal(stop.status) ? "seasonal-verified" : "verified";
                 stop.verify_count = (stop.verify_count || 0) + 1;
                 stop.report_count = 0; // reconfirming outweighs prior flags
-                marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count));
+                marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count, stop.verify_count));
                 marker.setPopupContent(popupHTML(stop));
                 showToast(wasVerified
                   ? `Thanks for confirming ${stop.name} is still there!`
@@ -729,7 +766,7 @@
                   if (result.verify_count != null) stop.verify_count = result.verify_count;
                   stop.report_count = 0; // server clears this on any successful verify/upvote
                   pendingVerify.set(String(stop.id), Date.now());
-                  marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count));
+                  marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count, stop.verify_count));
                   marker.setPopupContent(popupHTML(stop));
                   showToast(result.changed
                     ? `${stop.name} marked verified — thanks for checking it on foot!`
@@ -757,7 +794,7 @@
                 window.location.href = `mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20Report%20a%20problem&body=Stop%3A%20${encodeURIComponent(stop.name)}%20(id%20${stop.id})%0AProblem%3A%0A`;
                 stop.report_count = (stop.report_count || 0) + 1;
                 markReported(stop.id);
-                marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count));
+                marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count, stop.verify_count));
                 marker.setPopupContent(popupHTML(stop));
                 return;
               }
@@ -774,7 +811,7 @@
                   if (result.changed) stop.status = result.status;
                   pendingVerify.set(String(stop.id), Date.now());
                   markReported(stop.id);
-                  marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count));
+                  marker.setIcon(makeIcon(stop.type, stop.status, stop.sponsored, stop.report_count, stop.verify_count));
                   marker.setPopupContent(popupHTML(stop));
                   showToast(result.changed
                     ? `${stop.name} flagged by enough people that it's back to unverified — thanks for looking out.`
@@ -904,6 +941,52 @@
   // Share modal (desktop fallback when navigator.share is unavailable)
   const shareModal = document.getElementById('share-modal');
   shareModal.addEventListener('click', (e) => { if (e.target === shareModal) shareModal.classList.remove('open'); });
+
+  // Weekly-updates subscribe modal
+  const subscribeModal = document.getElementById('subscribe-modal');
+  document.getElementById('subscribe-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    subscribeModal.classList.add('open');
+  });
+  subscribeModal.addEventListener('click', (e) => { if (e.target === subscribeModal) subscribeModal.classList.remove('open'); });
+
+  document.getElementById('subscribe-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const emailInput = document.getElementById('subscribe-email');
+    const submitBtn = document.getElementById('subscribe-submit');
+    const email = emailInput.value.trim();
+    const body = document.getElementById('subscribe-body');
+
+    if (!CONFIG.SUBSCRIBE_URL) {
+      // No write-back endpoint configured — fall back to a prefilled
+      // mailto so the maintainer can add the person by hand, same
+      // graceful-degradation pattern as REPORT_URL/VERIFY_URL.
+      window.location.href = `mailto:sjneedham@icloud.com?subject=Add%20me%20to%20the%20weekly%20digest&body=Email%3A%20${encodeURIComponent(email)}`;
+      body.innerHTML = `<div class="subscribe-status">Sign-ups aren't fully automatic yet — this'll email me directly, and I'll add you by hand.</div>`;
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Subscribing...";
+    try {
+      const res = await fetch(CONFIG.SUBSCRIBE_URL, {
+        method: "POST",
+        body: new URLSearchParams({ email })
+      });
+      const result = await res.json();
+      if (result.ok) {
+        body.innerHTML = `<div class="subscribe-status">You're in — look for the next weekly update. Unsubscribe any time from the link in the email.</div>`;
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Subscribe";
+        showToast("That didn't look like a valid email — try again.", "error");
+      }
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Subscribe";
+      showToast("Network error — try again.", "error");
+    }
+  });
 
   // Reflect signed-in state (set by signup.html's Google sign-in) in the nav link.
   try {

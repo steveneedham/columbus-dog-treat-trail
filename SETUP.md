@@ -388,3 +388,44 @@ exception to `verify.gs`'s "only ever moves forward" rule, mitigated
 by requiring multiple independent reports (and a per-browser
 localStorage guard against one visitor reporting the same stop
 twice) rather than trusting any single report.
+
+## 14. Popular stops render bigger on the map
+
+Pins now scale up with `verify_count` — a stop a lot of people have
+confirmed "still here" on reads as bigger, capped so a handful of
+superfans can't blow one pin up to dominate the whole map (see
+`pinSizeFor()` in `index.html`, sqrt-scaled, 22px base → 34px cap
+around 16 confirmations). No setup needed beyond what step 13 above
+already covers — this reads the same `verify_count` column.
+
+## 15. Real email sign-up for the weekly digest
+
+Section 9 originally built the weekly digest as manually-curated only
+— there was no safe way to make it public without an opt-in +
+unsubscribe flow. This adds that flow, so `index.html`'s "Weekly
+updates" box is a real, working subscribe form.
+
+1. In the same Apps Script project as the other endpoints, add
+   [`subscribe.gs`](./subscribe.gs).
+2. Add a **Subscribers** tab to the spreadsheet: header row
+   `email | subscribed_at | unsubscribed_at`.
+3. Deploy `subscribe.gs` as its own Web App (same Execute-as-Me,
+   Anyone-can-access pattern as the other endpoints). It handles both
+   subscribing (`doPost`) and unsubscribing via a plain link
+   (`doGet`, `?action=unsubscribe&email=...`) — no JS needed to
+   unsubscribe from an email client.
+4. Paste that deployment URL into `CONFIG.SUBSCRIBE_URL` near the top
+   of `index.html`.
+5. Also paste it into a `SUBSCRIBE_URL` Script Property (Project
+   Settings → Script Properties) — `digest.gs` uses this to build each
+   recipient's personalized unsubscribe link.
+6. `digest.gs` now sends **individually** to each recipient (not one
+   bulk-CC'd email) — the union of `DIGEST_RECIPIENTS` (manually-added
+   people) and every non-unsubscribed row in Subscribers — so nobody
+   sees anyone else's address and unsubscribing actually works.
+
+Leave `CONFIG.SUBSCRIBE_URL` blank and the box still works — it falls
+back to a prefilled `mailto:` so you can add people by hand, same
+degradation pattern as everything else here. Real bulk email still has
+a `MailApp` daily send quota and no sender-reputation warmup, worth
+keeping in mind if this list grows well past a small neighborhood.
