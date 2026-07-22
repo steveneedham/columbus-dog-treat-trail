@@ -57,7 +57,10 @@
  * legend on the map) but means:
  *   - geocoding accuracy is only as good as the typed address/cross-
  *     streets, not the literal spot — nudge lat/lng once you've
- *     actually walked it and are flipping status to "verified".
+ *     actually walked it and are flipping status to "verified". EXCEPT:
+ *     if the address field is exactly "lat,lng" (what index.html's
+ *     "Use my current location" button prefills), that's used directly
+ *     instead of geocoding — a device GPS fix, so no nudging needed.
  *   - if geocoding fails, lat/lng are left blank and the row still
  *     gets appended + marked "Copied" — but the site's loader drops
  *     any Stops row with non-numeric lat/lng, so it just won't show
@@ -180,15 +183,26 @@ function onApproveEdit(e) {
   }
 
   var lat = '', lng = '';
-  try {
-    var geo = Maps.newGeocoder().geocode(address + ', Columbus, OH');
-    if (geo.results && geo.results.length > 0) {
-      lat = geo.results[0].geometry.location.lat;
-      lng = geo.results[0].geometry.location.lng;
+
+  // index.html's "Use my current location" button prefills this field
+  // with the visitor's exact GPS coordinates as "lat,lng" — when that's
+  // what we got, use it directly instead of geocoding, since a device
+  // fix is more accurate than re-deriving a point from typed text.
+  var gpsMatch = String(address).trim().match(/^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/);
+  if (gpsMatch) {
+    lat = Number(gpsMatch[1]);
+    lng = Number(gpsMatch[2]);
+  } else {
+    try {
+      var geo = Maps.newGeocoder().geocode(address + ', Columbus, OH');
+      if (geo.results && geo.results.length > 0) {
+        lat = geo.results[0].geometry.location.lat;
+        lng = geo.results[0].geometry.location.lng;
+      }
+    } catch (err) {
+      // leave lat/lng blank if geocoding fails — see note above about
+      // this being a silent failure on the map side
     }
-  } catch (err) {
-    // leave lat/lng blank if geocoding fails — see note above about
-    // this being a silent failure on the map side
   }
 
   var typeFormatted = String(type).trim().toLowerCase().replace(/\s+/g, '_');
