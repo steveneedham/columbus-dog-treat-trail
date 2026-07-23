@@ -580,3 +580,54 @@ neighborhood field just stays manual.
 Once the site's deployed, any QR generator pointed at
 `https://steveneedham.github.io/columbus-dog-treat-trail/promo.html`
 works — there's nothing app-specific about the code itself.
+
+## 19. Optional: ScoutSights (`scoutsights.html`) — real GA4 reporting + a Pings heatmap
+
+This turns the earlier "publish a CSV, drag it into kepler.gl by hand"
+workflow (section 17) and a real Google Analytics report into one
+admin-facing page in the app itself, styled like the rest of the site
+rather than a generic tool screenshot. Like `moderation.html`, it's not
+linked from the main nav and has no login — same honesty-over-security
+tradeoff as the rest of this no-login site (see `report.gs`'s security
+note). Both panels are independently optional.
+
+### Google Analytics panel
+
+This is the one integration in the project that isn't "paste a
+deployment URL and go" — Apps Script can't infer it needs Analytics
+access on its own, so [`ga-report.gs`](./ga-report.gs) needs two extra
+steps beyond the usual. Full instructions are in the comment at the
+top of that file, but in short:
+
+1. Add `ga-report.gs` as a new Apps Script file (its own project, or a
+   new file in the existing one — it never touches the Stops sheet).
+2. Find your **GA4 property ID** (Analytics > Admin > Property details
+   — a plain number, not the `G-XXXXXXX` measurement ID already in
+   `assets/analytics.js`) and paste it into `GA4_PROPERTY_ID`.
+3. In the Apps Script editor, show the `appsscript.json` manifest and
+   add an `oauthScopes` array requesting
+   `analytics.readonly` + `script.external_request` — without this the
+   report call 403s.
+4. Confirm the account that owns the script has Viewer access on the
+   GA4 property, then deploy as a Web App (Execute as Me, Anyone can
+   access) and paste the URL into `CONFIG.GA_REPORT_URL` near the top
+   of `scoutsights.html`.
+
+Once set, the panel shows real 30-day totals (users, sessions,
+engagement rate, average engagement time), a sessions-per-day
+sparkline, and the top pages by views — all pulled live from GA4 and
+cached for an hour so refreshing the page doesn't burn through the
+Data API's daily quota. Leave `GA_REPORT_URL` blank and the panel just
+explains what's missing instead of erroring.
+
+### Location interest heatmap panel
+
+Uses the real `Pings` tab from section 17 — publish it to the web as
+CSV the same way as `Stops`, and paste that URL into
+`CONFIG.PINGS_CSV_URL`. The panel then renders an actual Leaflet map
+with a `leaflet.heat` layer over the real pings (colored moss → amber
+→ rust, the site's own accent colors), auto-fit to wherever the data
+actually is. Leave it blank and, again, it just explains what's
+missing. Exploring the same data in kepler.gl (section 17) still works
+independently — this doesn't replace that, it's just a faster
+day-to-day glance without leaving the app.
