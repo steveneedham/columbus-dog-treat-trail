@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Research / Position Paper" description="Flowing long-form paper — title, abstract, sections, citations, references" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<script src="./doc-page.js"></script>
+<style>doc-page:not(:defined){visibility:hidden}
+.rp-body h1{font-family:var(--font-display);font-weight:700;font-size:27px;line-height:1.2;margin:0 0 6px;color:var(--ink)}
+.rp-body h2{font-family:var(--font-display);font-weight:700;font-size:19px;margin:30px 0 9px;color:var(--ink)}
+.rp-body h3{font-family:var(--font-display);font-weight:600;font-size:14.5px;margin:20px 0 7px;color:var(--ink)}
+.rp-body p{font-family:var(--font-body);font-size:12.5px;line-height:1.65;color:var(--ink);margin:0 0 12px}
+.rp-body ul,.rp-body ol{font-family:var(--font-body);font-size:12.5px;line-height:1.65;color:var(--ink);margin:0 0 12px;padding-left:20px}
+.rp-body li{margin-bottom:4px}
+.rp-body a{color:var(--rust)}
+.rp-body a:hover{color:var(--rust-dark)}
+.rp-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);letter-spacing:0.03em;margin:0 0 22px}
+.rp-abstract{background:var(--paper-dark);border-left:3px solid var(--rust);padding:14px 16px;margin:0 0 22px;font-family:var(--font-body);font-size:12px;line-height:1.6;color:var(--ink-soft)}
+.rp-abstract strong{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink);display:block;margin-bottom:6px}
+.rp-refs{font-family:var(--font-body);font-size:11.5px;line-height:1.6;color:var(--ink-soft);margin:0;padding-left:20px}
+.rp-foot{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-soft);border-top:1px solid var(--line);margin-top:36px;padding-top:10px}
+</style>
+</helmet>
+<doc-page margin="0.9in">
+<div class="rp-body">
+<h1>Title of the Paper — Replace With Your Thesis</h1>
+<div class="rp-meta">Author Name · Affiliation · <span>July 2026</span></div>
+<div class="rp-abstract"><strong>Abstract</strong>Summarize the position or research question in 3–5 sentences: the problem, your claim or finding, and why it matters. Keep it self-contained — a reader should get the gist from this box alone.</div>
+<h2>1. Introduction</h2>
+<p>State the problem or question this paper addresses. Establish why it matters now, and preview the structure of the argument or findings that follow.</p>
+<h2>2. Background</h2>
+<p>Give the reader the context needed to follow your argument — prior work, relevant data, or the current state of practice. Cite sources inline (e.g. Smith, 2024) and list them in full under References.</p>
+<h2>3. Argument / Findings</h2>
+<h3>3.1 First point</h3>
+<p>Develop your first supporting point or result here. Use short paragraphs and concrete evidence rather than sweeping claims.</p>
+<h3>3.2 Second point</h3>
+<p>Continue building the case. Where useful, contrast with a counterargument and explain why your position holds.</p>
+<h2>4. Implications</h2>
+<p>Explain what follows if your argument is accepted — for practice, policy, or further research.</p>
+<h2>5. Conclusion</h2>
+<p>Restate the core claim plainly and note open questions or next steps.</p>
+<h2>References</h2>
+<ol class="rp-refs">
+<li>Author, A. (Year). <em>Title of the work</em>. Publisher.</li>
+<li>Author, B. (Year). Title of the article. <em>Journal Name</em>, volume(issue), pages.</li>
+</ol>
+<div class="rp-foot">© 2026 Author Name. All rights reserved unless otherwise noted. Prepared with the Columbus Dog Treat Trail design system.</div>
+</div>
+</doc-page>
+
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!-- @dsCard group="Map App" viewport="480x900" name="Suggest a Stop — Revised Form" subtitle="Intentional addition — expands the live Google Form (currently just 'Stop name') into structured fields matching the stop data model" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Suggest a stop — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Brand, Button, Chip } = window.ColumbusDogTreatTrailDesignSystem_791ae7;
+const TYPES=['Treat stand','Stick library','Water bowl','Toy box','Other'];
+const inputStyle={fontFamily:'var(--font-body)',fontSize:14,padding:'10px 11px',borderRadius:3,border:'1.5px solid var(--ink)',background:'var(--white)',color:'var(--ink)',width:'100%'};
+function Field({label,hint,children}){return <div style={{display:'flex',flexDirection:'column',gap:5}}><label style={{fontFamily:'var(--font-mono)',fontSize:10.5,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--ink-soft)'}}>{label}</label>{children}{hint&&<div style={{fontSize:11.5,color:'var(--ink-soft)',lineHeight:1.4}}>{hint}</div>}</div>;}
+function Toggle({checked,onChange,label}){return <div onClick={onChange} style={{display:'flex',alignItems:'center',gap:9,cursor:'pointer'}}><div style={{width:34,height:20,borderRadius:12,border:'1.5px solid var(--ink)',background:checked?'var(--moss)':'var(--white)',position:'relative',flexShrink:0}}><div style={{position:'absolute',top:1,left:checked?15:1,width:15,height:15,borderRadius:'50%',background:checked?'var(--white)':'var(--ink)',transition:'left .12s ease'}}></div></div><span style={{fontSize:13}}>{label}</span></div>;}
+function Form(){
+  const [type,setType]=React.useState('Treat stand');
+  const [seasonal,setSeasonal]=React.useState(false);
+  const [isBiz,setIsBiz]=React.useState(false);
+  return (
+    <div style={{maxWidth:420,margin:'0 auto',padding:'20px 20px 40px',display:'flex',flexDirection:'column',gap:18}}>
+      <Brand subtitle="Suggest a stop" logoSrc="../../assets/logo-lockup.svg" />
+      <div style={{background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:4,boxShadow:'var(--shadow-md)',padding:22,display:'flex',flexDirection:'column',gap:16}}>
+        <div style={{fontSize:13,lineHeight:1.6,color:'var(--ink-soft)'}}>Found a stash, stick library, water bowl, or toy box? Add it to the map. A few notes help us keep it useful: easy to find, usable most of the year, free if it's at a business, and family- and dog-friendly.</div>
+
+        <Field label="Stop name *"><input style={inputStyle} placeholder='e.g. "Mutts &amp; Co. treat jar"' /></Field>
+
+        <Field label="Type *">
+          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+            {TYPES.map(t=><div key={t} onClick={()=>setType(t)} style={{fontFamily:'var(--font-mono)',fontSize:11.5,fontWeight:600,padding:'7px 12px',borderRadius:999,border:'1.5px solid var(--ink)',cursor:'pointer',background:type===t?'var(--ink)':'var(--white)',color:type===t?'var(--white)':'var(--ink)'}}>{t}</div>)}
+          </div>
+        </Field>
+
+        <Field label="Location *" hint="Cross-streets or address work better than pin-dropping — we walk it before it goes live.">
+          <input style={inputStyle} placeholder="e.g. E Whittier St &amp; City Park Ave" />
+        </Field>
+
+        <Field label="Landmark / how to spot it" hint='Only if there is no sign — e.g. "blue mailbox next to the porch."'>
+          <input style={inputStyle} placeholder="Optional" />
+        </Field>
+
+        <Field label="Photo" hint="Helps us verify faster — optional but appreciated.">
+          <div style={{border:'1.5px dashed var(--line)',borderRadius:3,padding:'18px 12px',textAlign:'center',fontSize:12,color:'var(--ink-soft)',fontFamily:'var(--font-mono)'}}>Drop a photo or tap to upload</div>
+        </Field>
+
+        <div style={{display:'flex',flexDirection:'column',gap:10,borderTop:'1.5px solid var(--line)',borderBottom:'1.5px solid var(--line)',padding:'14px 0'}}>
+          <Toggle checked={isBiz} onChange={()=>setIsBiz(!isBiz)} label="This is at a business" />
+          <Toggle checked={seasonal} onChange={()=>setSeasonal(!seasonal)} label="Seasonal / not year-round" />
+        </div>
+
+        <Field label="Notes" hint="Anything else — hours, access, why it doesn't quite fit the checklist, etc.">
+          <textarea style={{...inputStyle,minHeight:70,resize:'vertical'}} placeholder="Optional"></textarea>
+        </Field>
+
+        <Field label="Your email *" hint="Only used if we have a question — never shown publicly.">
+          <input style={inputStyle} type="email" placeholder="you@example.com" />
+        </Field>
+
+        <Button variant="primary">Submit stop →</Button>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Form />);
+</script>
+</body>
+</html>

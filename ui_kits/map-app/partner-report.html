@@ -1,0 +1,78 @@
+<!-- @dsCard group="Map App" viewport="900x820" name="Partner Report" subtitle="Intentional addition — monthly performance report sent to sponsors, built from ScoutSights data" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Partner report — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Brand, Panel, Button, Badge } = window.ColumbusDogTreatTrailDesignSystem_791ae7;
+const DAILY=[3,4,2,5,6,3,4,7,5,4,6,8,5,4,6,9,7,5,6,8,9,7,5,8,10,7,6,9,10,8];
+function Sparkline(){
+  const max=Math.max(...DAILY);
+  return (<svg viewBox="0 0 100 16" preserveAspectRatio="none" style={{width:'100%',height:52,display:'block'}}>
+    {DAILY.map((d,i)=>{const bh=(d/max)*14.5;const x=i*(100/DAILY.length);const w=(100/DAILY.length)-0.5;
+      return <rect key={i} x={x} y={16-bh} width={w} height={bh} fill="var(--rust)" />;})}
+  </svg>);
+}
+function Stat({value,label}){return <div style={{background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:3,padding:'10px 12px',boxShadow:'var(--shadow-sm)'}}><div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:21}}>{value}</div><div style={{fontFamily:'var(--font-mono)',fontSize:9.5,color:'var(--ink-soft)',textTransform:'uppercase'}}>{label}</div></div>;}
+function Page(){
+  return (
+    <div style={{maxWidth:820,margin:'0 auto',padding:'20px 24px 40px',display:'flex',flexDirection:'column',gap:16}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <Brand subtitle="Partner report" logoSrc="../../assets/logo-lockup.svg" />
+        <Button>Download PDF</Button>
+      </div>
+      <div style={{background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:4,boxShadow:'var(--shadow-md)',padding:'20px 22px',display:'flex',flexDirection:'column',gap:18}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+          <div>
+            <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:22}}>Lost & Hound</div>
+            <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--ink-soft)',marginTop:2}}>German Village · Neighborhood Partner tier</div>
+          </div>
+          <Badge tone="verified">Sponsorship active</Badge>
+        </div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:10.5,color:'var(--ink-soft)',textTransform:'uppercase',letterSpacing:'0.06em',borderTop:'1.5px solid var(--line)',borderBottom:'1.5px solid var(--line)',padding:'8px 0'}}>Report period: June 23 – July 22, 2026 · powered by ScoutSights</div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+          <Stat value="3,140" label="Pin impressions" />
+          <Stat value="612" label="Popup opens" />
+          <Stat value="19.5%" label="Popup open rate" />
+          <Stat value="~87" label="Est. redemptions" />
+        </div>
+
+        <div>
+          <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ink-soft)',textTransform:'uppercase',marginBottom:7}}>Popup opens · last 30 days</div>
+          <Sparkline />
+        </div>
+
+        <Panel label="Where your walkers are coming from">
+          <div style={{display:'flex',flexDirection:'column',gap:8,fontSize:12.5}}>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span>German Village</span><strong>58%</strong></div>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span>Merion Village</span><strong>21%</strong></div>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span>Schumacher Place</span><strong>13%</strong></div>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span>Other</span><strong>8%</strong></div>
+          </div>
+        </Panel>
+
+        <Panel label="Your active promo">
+          <div style={{fontSize:12.5,lineHeight:1.6}}>"Show this stop at checkout for 10% off!" — live since June 3. Est. redemptions are self-reported by walkers tapping "I redeemed this" in the popup, not a POS integration.</div>
+        </Panel>
+
+        <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ink-soft)',lineHeight:1.5}}>Impressions and popup opens come from anonymous, aggregated GA4 events — no individual walker is ever identified. Redemption counts are self-reported and directional, not a guarantee of in-store activity.</div>
+      </div>
+      <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--ink-soft)',textAlign:'center'}}>Questions about this report? Reply to your sponsorship confirmation email.</div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#5B5648;text-align:center;padding:10px 14px 16px;background:#EDE6D6">© 2026 Steven Needham · Columbus Dog Treat Trail · fan-made, not affiliated with businesses shown</div></body>
+</html>
