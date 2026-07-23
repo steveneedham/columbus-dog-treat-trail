@@ -1,0 +1,64 @@
+<!--
+  Columbus Dog Treat Trail — About & Why
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — Columbus Dog Treat Trail</title>
+<script src="assets/analytics.js"></script>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .hero{display:flex; align-items:center; gap:16px;}
+  .hero img{width:56px; height:56px; flex-shrink:0;}
+  .hero h1{font-family:var(--font-display); font-weight:700; font-size:26px; margin:0; line-height:1.25;}
+  .lede{font-size:14.5px; line-height:1.7;}
+  .why-item{margin-bottom:14px;}
+  .why-item:last-child{margin-bottom:0;}
+  .why-item strong{font-family:var(--font-display);}
+  .why-item a{color:var(--rust);}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-topbar">
+    <div id="brand"></div>
+    <a class="btn small" href="index.html">← Back to the map</a>
+  </div>
+
+  <div class="hero">
+    <img src="assets/mascot/scout-mark.svg" alt="Scout">
+    <h1>A map built from one dog walk in German Village</h1>
+  </div>
+
+  <p class="lede">It started with a single loop through German Village — a bowl of biscuits on a porch rail, a pile of sticks under a tree, a water bowl outside a shop door. None of it was hard to find once you knew to look, but none of it was written down anywhere either. Treat Trail exists to write it down.</p>
+
+  <div class="panel">
+    <div class="panel-label">Why it's built this way</div>
+    <div class="why-item"><strong>Verified, not assumed.</strong> Anyone can suggest a stop, but nothing is trusted until a real person has walked past it and checked. That's slower than crowdsourcing everything instantly — on purpose.</div>
+    <div class="why-item"><strong>One person, hand-built.</strong> No company, no ad budget, no growth targets — just a static map and a spreadsheet, kept honest because there's nothing to gain by inflating it.</div>
+    <div class="why-item"><strong>A companion, not a copy.</strong> Built the same way as <a href="https://github.com/steveneedham/columbus-pantry-map">Columbus PantryMap</a> — same "one static page, one Sheet" approach — but for a lighter, more playful find: the good stuff dogs (and their people) stumble on mid-walk.</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Who it's for</div>
+    <div style="font-size:14px; line-height:1.6;">Anyone walking a dog in Columbus who wants to know what's around the next corner — and anyone who's spotted something worth sharing on their own walk.</div>
+  </div>
+
+  <div class="footer-note">Columbus Dog Treat Trail &middot; built and maintained by one person, one walk at a time</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("About & why");
+</script>
+
+<div class="build-stamp">Last updated 2026-07-23 05:00 UTC</div>
+</body>
+</html>

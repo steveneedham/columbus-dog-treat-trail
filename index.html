@@ -25,6 +25,8 @@
   })();
 </script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjQjU1MDJDIi8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTAsNTgpIHNjYWxlKDAuNDIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9IjMwIiByeD0iMjciIHJ5PSIyMSIgZmlsbD0iI0Y3RjRFQyIvPjxlbGxpcHNlIGN4PSItMjciIGN5PSItMiIgcng9IjEyIiByeT0iMTUuNSIgZmlsbD0iI0Y3RjRFQyIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIC0yNyAtMikiLz48ZWxsaXBzZSBjeD0iLTkiIGN5PSItMTkiIHJ4PSIxMiIgcnk9IjE2IiBmaWxsPSIjRjdGNEVDIiB0cmFuc2Zvcm09InJvdGF0ZSgtOCAtOSAtMTkpIi8+PGVsbGlwc2UgY3g9IjEyIiBjeT0iLTE5IiByeD0iMTIiIHJ5PSIxNiIgZmlsbD0iI0Y3RjRFQyIgdHJhbnNmb3JtPSJyb3RhdGUoOCAxMiAtMTkpIi8+PGVsbGlwc2UgY3g9IjMwIiBjeT0iLTIiIHJ4PSIxMiIgcnk9IjE1LjUiIGZpbGw9IiNGN0Y0RUMiIHRyYW5zZm9ybT0icm90YXRlKDIyIDMwIC0yKSIvPjwvZz48L3N2Zz4K">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#EDE6D6">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -308,24 +310,19 @@
 
 <div class="topbar">
   <div class="brand">
-    <svg class="lockup" viewBox="0 0 340 76" xmlns="http://www.w3.org/2000/svg">
-      <g transform="translate(0,0) scale(0.34)">
-        <circle cx="110" cy="110" r="104" fill="#EDE6D6" stroke="#2B2A26" stroke-width="6"/>
-        <path d="M 30 150 C 70 175, 110 175, 130 140 S 190 90, 185 65" fill="none" stroke="#4C6B4F" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 14"/>
-        <g transform="translate(178,50)">
-          <line x1="0" y1="0" x2="0" y2="22" stroke="#2B2A26" stroke-width="3" stroke-linecap="round"/>
-          <path d="M 0 0 L 16 5 L 0 11 Z" fill="#C68A2E"/>
-        </g>
-        <g transform="translate(88,92) rotate(-6)">
-          <ellipse cx="0" cy="30" rx="27" ry="21" fill="#B5502C" stroke="#2B2A26" stroke-width="2"/>
-          <ellipse cx="-27" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-22 -27 -2)"/>
-          <ellipse cx="-9" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-8 -9 -19)"/>
-          <ellipse cx="12" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(8 12 -19)"/>
-          <ellipse cx="30" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(22 30 -2)"/>
-        </g>
+    <svg class="lockup" viewBox="0 0 340 96" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(4,3) scale(0.62)">
+        <path d="M18 26C6 20 -2 34 4 46c4.5 9 13 12 20 7" fill="#F7F3E8" stroke="#2B2A26" stroke-width="3"/>
+        <path d="M86 26c12-6 20 8 14 20-4.5 9-13 12-20 7" fill="#F7F3E8" stroke="#2B2A26" stroke-width="3"/>
+        <ellipse cx="52" cy="52" rx="36" ry="33" fill="#F7F3E8" stroke="#2B2A26" stroke-width="3.2"/>
+        <circle cx="41" cy="47" r="3.6" fill="#2B2A26"/><circle cx="63" cy="47" r="3.6" fill="#2B2A26"/>
+        <ellipse cx="52" cy="57" rx="4.2" ry="3.4" fill="#2B2A26"/>
+        <path d="M42 60c3 3.5 7 5.2 10 5.2s7-1.7 10-5.2" stroke="#2B2A26" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M27 76 52 91l25-15v17l-25 14-25-14Z" fill="#B5502C" stroke="#2B2A26" stroke-width="3"/>
+        <circle cx="52" cy="89" r="4.6" fill="#F7F3E8" stroke="#2B2A26" stroke-width="2.2"/>
       </g>
-      <text x="86" y="34" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" letter-spacing="1.6" fill="#5B5648">COLUMBUS</text>
-      <text x="86" y="60" font-family="'Fraunces', serif" font-size="26" font-weight="700" fill="#2B2A26">DOG TREAT TRAIL</text>
+      <text x="82" y="42" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" letter-spacing="1.6" fill="#5B5648">COLUMBUS</text>
+      <text x="82" y="68" font-family="'Fraunces', serif" font-size="26" font-weight="700" fill="#2B2A26">DOG TREAT TRAIL</text>
     </svg>
     <div>
       <div class="subtitle">Stashes spotted on foot — v0.5</div>
@@ -349,6 +346,7 @@
       <a href="trail-flier.html">Flier</a>
       <a href="signup.html" id="member-link">Join the trail</a>
       <a href="#" id="subscribe-link">Weekly updates</a>
+      <a href="#" id="invite-link">Invite friends</a>
     </div>
   </div>
 </div>
@@ -364,7 +362,7 @@
   <div class="row" style="margin-top:4px;">Dashed ring = seasonal</div>
 </div>
 
-<div class="footer">Columbus Dog Treat Trail v0.5 · &copy; 2026 Steven Needham · <a href="moderation.html" style="color:inherit;">Moderation</a> · <a href="admin.html" style="color:inherit;">Sitemap</a></div>
+<div class="footer">Columbus Dog Treat Trail v0.5 · &copy; 2026 Steven Needham · <a href="about.html" style="color:inherit;">About</a> · <a href="moderation.html" style="color:inherit;">Moderation</a> · <a href="admin.html" style="color:inherit;">Sitemap</a></div>
 
 <div class="build-stamp">Last updated 2026-07-21 22:02 UTC</div>
 
@@ -384,7 +382,7 @@
 
 <div class="modal-backdrop" id="share-modal">
   <div class="modal">
-    <h2>Share this stop</h2>
+    <h2 id="share-modal-title">Share this stop</h2>
     <p id="share-modal-sub"></p>
     <div class="share-grid" id="share-grid"></div>
   </div>
@@ -761,10 +759,13 @@
     return `${location.origin}${location.pathname.replace(/[^/]*$/, "")}stop-detail.html?id=${encodeURIComponent(stop.id)}`;
   }
 
-  function openShareModal(stop) {
-    const url = stopShareUrl(stop);
-    const text = `${stop.name} — Columbus Dog Treat Trail`;
-    document.getElementById("share-modal-sub").textContent = stop.name;
+  function siteShareUrl() {
+    return `${location.origin}${location.pathname.replace(/[^/]*$/, "")}`;
+  }
+
+  function openShareModal(url, text, title, subText) {
+    document.getElementById("share-modal-title").textContent = title;
+    document.getElementById("share-modal-sub").textContent = subText;
     const targets = [
       { label: "Copy link", icon: SHARE_ICONS.copyLink, action: async () => {
           try { await navigator.clipboard.writeText(url); showToast("Link copied to clipboard"); }
@@ -795,11 +796,22 @@
 
   async function shareStop(stop) {
     const url = stopShareUrl(stop);
-    const shareData = { title: stop.name, text: `${stop.name} — Columbus Dog Treat Trail`, url };
+    const text = `${stop.name} — Columbus Dog Treat Trail`;
     if (navigator.share) {
-      try { await navigator.share(shareData); return; } catch (err) { /* cancelled/unsupported, fall through */ }
+      try { await navigator.share({ title: stop.name, text, url }); return; } catch (err) { /* cancelled/unsupported, fall through */ }
     }
-    openShareModal(stop);
+    openShareModal(url, text, "Share this stop", stop.name);
+  }
+
+  // "Invite friends" — same share sheet as sharing a single stop, just
+  // pointed at the whole map instead of one pin, for growing the trail.
+  async function shareTrail() {
+    const url = siteShareUrl();
+    const text = "Columbus Dog Treat Trail — a crowdsourced map of dog-treat stashes, stick libraries, water bowls, and toy boxes spotted on walks around Columbus.";
+    if (navigator.share) {
+      try { await navigator.share({ title: "Columbus Dog Treat Trail", text, url }); return; } catch (err) { /* cancelled/unsupported, fall through */ }
+    }
+    openShareModal(url, text, "Help grow the trail!", "Share the map with a friend");
   }
 
   // Per-browser guard so one visitor can't rack up multiple reports on
@@ -1026,7 +1038,14 @@
   // v0.5: initial load, then keep the map current in the background
   // (timer) and whenever someone pans/zooms to a new area (moveend) —
   // both share the same rate limit so neither can spam the Sheet.
-  refreshStops(true).then(flyToHoodFromHash);
+  // Proactively ask for location once stops are loaded, for the best
+  // out-of-the-box experience (map centered on the visitor immediately,
+  // no need to find and tap "Near me" first). silent=true: a returning
+  // visitor who denied it once shouldn't see an error toast every time
+  // they open the site — browsers don't re-prompt after a decision
+  // either way, so this only ever surfaces the real permission dialog
+  // once.
+  refreshStops(true).then(() => { flyToHoodFromHash(); locateMe(true); });
   map.on('moveend', () => refreshStops(false));
   setInterval(() => refreshStops(false), CONFIG.REFRESH_INTERVAL_MS);
 
@@ -1157,29 +1176,46 @@
     return String((hash % 10) + 1).padStart(2, "0");
   }
 
+  // Same locked → collar → crown progression as profile.html's
+  // tierFor(), duplicated locally per this file's existing convention
+  // (see distanceMiles above) rather than depending on that page.
+  function tierForVerified(verifiedCount) {
+    if (verifiedCount >= 10) return 3;
+    if (verifiedCount >= 3) return 2;
+    if (verifiedCount >= 1) return 1;
+    return 0;
+  }
+
   function getMyIdentity() {
     let member = null;
     try { member = JSON.parse(localStorage.getItem("cdtt_member") || "null"); } catch (err) { /* ignore */ }
     if (member && member.picture) {
-      return { kind: "member", name: member.name || "you", avatarUrl: member.picture };
+      // A real photo isn't "locked" the way a generic avatar face is —
+      // shown at full color regardless of tier.
+      return { kind: "member", name: member.name || "you", avatarUrl: member.picture, tier: null };
     }
     let name = null;
     try { name = localStorage.getItem("cdtt_profile_name"); } catch (err) { /* ignore */ }
     if (name) {
-      let choices = {};
-      try { choices = JSON.parse(localStorage.getItem("cdtt_avatar_choices") || "{}"); } catch (err) { /* ignore */ }
-      const slug = choices[name] || avatarSlugForName(name);
-      return { kind: "named", name, avatarUrl: `assets/icons/avatars/avatar-${slug}.svg` };
+      const slug = avatarSlugForName(name);
+      const verified = stops.filter(s => (s.submitted_by || "").trim() === name && isVerified(s.status)).length;
+      return { kind: "named", name, avatarUrl: `assets/icons/avatars/avatar-${slug}.svg`, tier: tierForVerified(verified) };
     }
-    return { kind: "anonymous", name: null, avatarUrl: null };
+    return { kind: "anonymous", name: null, avatarUrl: null, tier: 0 };
   }
 
   function meMarkerIcon(identity) {
     const src = identity.avatarUrl || DEFAULT_ANON_AVATAR;
-    const greyed = identity.kind === "anonymous" ? "filter:grayscale(1) opacity(0.75);" : "";
+    // Same tier treatment as profile.html's .avatar.locked/.tier2/.tier3
+    // — locked/greyed until the first verified stop, then a collar or
+    // crown ring, not just "anonymous vs. everyone else."
+    let style = "";
+    if (identity.kind === "anonymous" || identity.tier === 0) style = "filter:grayscale(1) opacity(0.75);";
+    else if (identity.tier === 2) style = "box-shadow:0 0 0 3px #4C6B4F;";
+    else if (identity.tier === 3) style = "box-shadow:0 0 0 3px #C68A2E;";
     return L.divIcon({
       className: "",
-      html: `<div style="width:34px;height:34px;border-radius:50%;border:2.5px solid #2B2A26;box-shadow:0 0 0 3px rgba(181,80,44,0.35);overflow:hidden;background:#FBF9F3;${greyed}">
+      html: `<div style="width:34px;height:34px;border-radius:50%;border:2.5px solid #2B2A26;overflow:hidden;background:#FBF9F3;${style}">
                <img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='${DEFAULT_ANON_AVATAR}';">
              </div>`,
       iconSize: [34, 34],
@@ -1259,8 +1295,15 @@
   }
 
   // Near me
-  document.getElementById('locate-btn').addEventListener('click', () => {
-    if (!navigator.geolocation) { showToast("Location isn't available in this browser.", "error"); return; }
+  // silent=true (used for the automatic on-load call below) skips the
+  // error toast entirely — a denied/unavailable prompt shouldn't nag a
+  // returning visitor on every single page load, only an explicit
+  // button press earns that feedback.
+  function locateMe(silent) {
+    if (!navigator.geolocation) {
+      if (!silent) showToast("Location isn't available in this browser.", "error");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       pos => {
         const { latitude, longitude } = pos.coords;
@@ -1278,6 +1321,7 @@
         }
       },
       err => {
+        if (silent) return;
         // See guidelines/brand-empty-states.html — the "location access
         // denied" card. err.code 1 === PERMISSION_DENIED specifically;
         // other codes (timeout, position unavailable) get a lighter message.
@@ -1287,7 +1331,8 @@
         );
       }
     );
-  });
+  }
+  document.getElementById('locate-btn').addEventListener('click', () => locateMe(false));
 
   // Suggest-a-stop modal
   const modal = document.getElementById('modal');
@@ -1328,6 +1373,12 @@
     subscribeModal.classList.add('open');
   });
   subscribeModal.addEventListener('click', (e) => { if (e.target === subscribeModal) subscribeModal.classList.remove('open'); });
+
+  // Invite friends — help grow the trail
+  document.getElementById('invite-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    shareTrail();
+  });
 
   document.getElementById('subscribe-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1374,6 +1425,16 @@
       document.getElementById('member-link').textContent = `Hi, ${(member.name || member.email).split(' ')[0]}`;
     }
   } catch (err) { /* ignore malformed localStorage */ }
+
+  // PWA install support — see manifest.webmanifest/sw.js. Registering
+  // this is what makes "Add to Home Screen" install the map as a
+  // standalone app; it's harmless (a silent no-op) in browsers without
+  // service worker support.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => { /* offline shell just won't be available — the site still works fully online */ });
+    });
+  }
 </script>
 
 </body>
