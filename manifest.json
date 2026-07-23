@@ -1,0 +1,91 @@
+create icons to put in manifest,json file
+Worked for 4m 13s
+
+Created the complete PWA icon package using the official paw branding:
+
+192×192 and 512×512 standard icons
+192×192 and 512×512 maskable icons
+Editable SVG sources
+Ready-to-use manifest.json
+
+Download the complete icon package
+
+manifest.json
+
+manifest.json
+{
+  "name": "Columbus Dog Treat Trail",
+  "short_name": "Treat Trail",
+  "description": "A crowdsourced map of dog-treat stashes, stick libraries, water bowls, and toy boxes in Columbus, Ohio.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDE6D6",
+  "theme_color": "#B5502C",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
+
+manifest.json
+{
+  "name": "Columbus Dog Treat Trail",
+  "short_name": "Treat Trail",
+  "description": "A crowdsourced map of dog-treat stashes, stick libraries, water bowls, and toy boxes in Columbus, Ohio.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDE6D6",
+  "theme_color": "#B5502C",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
