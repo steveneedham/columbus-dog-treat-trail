@@ -631,3 +631,31 @@ actually is. Leave it blank and, again, it just explains what's
 missing. Exploring the same data in kepler.gl (section 17) still works
 independently — this doesn't replace that, it's just a faster
 day-to-day glance without leaving the app.
+
+## 20. "You are here" avatar + first-visit welcome tour
+
+Two small additions to "Near me" in `index.html`, no setup required —
+both read only from things visitors have already done elsewhere in
+the app:
+
+**Your own avatar as the location pin.** Instead of a generic dot,
+"Near me" now shows whichever identity this browser already has:
+
+- Signed in via `signup.html` (`cdtt_member` in localStorage) → their
+  Google profile picture.
+- Named via `profile.html` (`cdtt_profile_name` + `cdtt_avatar_choices`)
+  → their chosen avatar, same resolution order as that page.
+- Neither → the same greyed-out "locked" avatar art `profile.html`
+  already uses for an unearned avatar (`avatar-04-locked.svg`), so
+  anonymous visitors get a visibly different, "not yet personalized"
+  pin rather than a copy of everyone else's. Tapping it opens a popup
+  with "Join the trail →" / "Pick a name →" links.
+
+**First-visit welcome tour.** The first time "Near me" lands somewhere
+with stops nearby in a neighborhood this browser hasn't seen before
+(tracked in `cdtt_visited_hoods`), a small modal introduces it by name
+and spotlights its top 3 stops by `verify_count` — "walked and
+confirmed by other neighbors," not just whatever's closest. Shows once
+per neighborhood per browser; the teleport-to-nearest banner (section
+above it in `index.html`) and this tour are mutually exclusive — one
+fires when nothing's nearby, the other only when something is.
