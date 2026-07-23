@@ -68,6 +68,9 @@
   <div class="section-title">Brand marks</div>
   <div id="brand-gallery" class="panel"></div>
 
+  <div class="section-title">Scout — expressions &amp; badges</div>
+  <div id="mascot-gallery" class="panel"></div>
+
   <div class="section-title">Every HTML page in this repo</div>
 
   <div class="section-title sub">Design system — guidelines</div>
@@ -117,10 +120,11 @@
     { name: "Join the trail", desc: "Google sign-in (no passwords stored) — makes your name durable instead of an honor-system pick.", href: "signup.html", path: "signup.html" },
     { name: "Neighborhoods", desc: "Browse stops grouped by neighborhood, with counts.", href: "neighborhoods.html", path: "neighborhoods.html" },
     { name: "Routes", desc: "“Suggest a walk” (a real route through verified stops) and “Explore” mode.", href: "routes.html", path: "routes.html" },
-    { name: "Profile", desc: "Leaderboard, avatar picker, levels, and badges derived from who's verified what.", href: "profile.html", path: "profile.html" },
+    { name: "Profile", desc: "Leaderboard and earned avatar progression (locked → collar → crown), levels and badges derived from who's verified what.", href: "profile.html", path: "profile.html" },
     { name: "Trail flier", desc: "Printable route card for a bulletin board, built from the current top loop.", href: "trail-flier.html", path: "trail-flier.html" },
     { name: "Stop detail", desc: "Shareable single-stop page — needs a real <code>?id=</code> from a pin's Share button to show anything.", href: "stop-detail.html", path: "stop-detail.html?id=…" },
-    { name: "Design your promo", desc: "QR-code landing page for businesses — a mini wizard that ends in a mailto (or CONFIG.PROMO_FORM_URL) sign-up for a sponsored pin.", href: "promo.html", path: "promo.html" }
+    { name: "Design your promo", desc: "QR-code landing page for businesses — a mini wizard that ends in a mailto (or CONFIG.PROMO_FORM_URL) sign-up for a sponsored pin.", href: "promo.html", path: "promo.html" },
+    { name: "About", desc: "Origin story and the verify-on-foot philosophy, linked from the map's footer.", href: "about.html", path: "about.html" }
   ]);
 
   renderLinks("admin-pages", [
@@ -181,11 +185,27 @@
     { src: "assets/logo-lockup.svg", label: "logo-lockup" },
     { src: "assets/logo-lockup-v2.svg", label: "logo-lockup-v2" },
     { src: "assets/logo-lockup-v3.svg", label: "logo-lockup-v3" },
+    { src: "assets/logo-lockup-v4.svg", label: "logo-lockup-v4 (current)" },
     { src: "assets/mark-paw-compass.svg", label: "mark-paw-compass" },
     { src: "assets/mark-dog-face.svg", label: "mark-dog-face" },
-    { src: "assets/mark-single-color.svg", label: "mark-single-color" },
+    { src: "assets/mark-dog-face-v2.svg", label: "mark-dog-face-v2 (current)" },
     { src: "assets/favicon-paw.svg", label: "favicon-paw" },
     { src: "assets/mascot-scout.svg", label: "mascot-scout" }
+  ]);
+
+  renderIconGrid("mascot-gallery", [
+    { src: "assets/mascot/scout-lockup.svg", label: "scout-lockup" },
+    { src: "assets/mascot/scout-mark.svg", label: "scout-mark" },
+    { src: "assets/mascot/scout-happy.svg", label: "scout-happy" },
+    { src: "assets/mascot/scout-wink.svg", label: "scout-wink" },
+    { src: "assets/mascot/scout-curious.svg", label: "scout-curious" },
+    { src: "assets/mascot/scout-calm.svg", label: "scout-calm" },
+    { src: "assets/mascot/scout-excited.svg", label: "scout-excited" },
+    { src: "assets/mascot/scout-badge-first-stop.svg", label: "scout-badge-first-stop" },
+    { src: "assets/mascot/scout-badge-streak.svg", label: "scout-badge-streak" },
+    { src: "assets/mascot/scout-badge-explorer.svg", label: "scout-badge-explorer" },
+    { src: "assets/mascot/scout-badge-milestone.svg", label: "scout-badge-milestone" },
+    { src: "assets/mascot/scout-badge-top-scout.svg", label: "scout-badge-top-scout" }
   ]);
 
   renderLinks("guideline-pages", [

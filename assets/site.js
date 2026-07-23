@@ -3,24 +3,21 @@
   Load after assets/stops-client.js (CDTT.escapeHtml is reused here).
 */
 (function (global) {
-  const LOCKUP_MARK = `<svg class="lockup" viewBox="0 0 340 76" xmlns="http://www.w3.org/2000/svg">
-    <g transform="translate(0,0) scale(0.34)">
-      <circle cx="110" cy="110" r="104" fill="#EDE6D6" stroke="#2B2A26" stroke-width="6"/>
-      <path d="M 30 150 C 70 175, 110 175, 130 140 S 190 90, 185 65" fill="none" stroke="#4C6B4F" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 14"/>
-      <g transform="translate(178,50)">
-        <line x1="0" y1="0" x2="0" y2="22" stroke="#2B2A26" stroke-width="3" stroke-linecap="round"/>
-        <path d="M 0 0 L 16 5 L 0 11 Z" fill="#C68A2E"/>
-      </g>
-      <g transform="translate(88,92) rotate(-6)">
-        <ellipse cx="0" cy="30" rx="27" ry="21" fill="#B5502C" stroke="#2B2A26" stroke-width="2"/>
-        <ellipse cx="-27" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-22 -27 -2)"/>
-        <ellipse cx="-9" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(-8 -9 -19)"/>
-        <ellipse cx="12" cy="-19" rx="12" ry="16" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(8 12 -19)"/>
-        <ellipse cx="30" cy="-2" rx="12" ry="15.5" fill="#B5502C" stroke="#2B2A26" stroke-width="2" transform="rotate(22 30 -2)"/>
-      </g>
+  // Scout-face mark, replacing the old paw/compass lockup — see
+  // SETUP.md's "Reconciling design-system updates" section.
+  const LOCKUP_MARK = `<svg class="lockup" viewBox="0 0 340 96" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(4,3) scale(0.62)">
+      <path d="M18 26C6 20 -2 34 4 46c4.5 9 13 12 20 7" fill="#F7F3E8" stroke="#2B2A26" stroke-width="3"/>
+      <path d="M86 26c12-6 20 8 14 20-4.5 9-13 12-20 7" fill="#F7F3E8" stroke="#2B2A26" stroke-width="3"/>
+      <ellipse cx="52" cy="52" rx="36" ry="33" fill="#F7F3E8" stroke="#2B2A26" stroke-width="3.2"/>
+      <circle cx="41" cy="47" r="3.6" fill="#2B2A26"/><circle cx="63" cy="47" r="3.6" fill="#2B2A26"/>
+      <ellipse cx="52" cy="57" rx="4.2" ry="3.4" fill="#2B2A26"/>
+      <path d="M42 60c3 3.5 7 5.2 10 5.2s7-1.7 10-5.2" stroke="#2B2A26" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M27 76 52 91l25-15v17l-25 14-25-14Z" fill="#B5502C" stroke="#2B2A26" stroke-width="3"/>
+      <circle cx="52" cy="89" r="4.6" fill="#F7F3E8" stroke="#2B2A26" stroke-width="2.2"/>
     </g>
-    <text x="86" y="34" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" letter-spacing="1.6" fill="#5B5648">COLUMBUS</text>
-    <text x="86" y="60" font-family="'Fraunces', serif" font-size="26" font-weight="700" fill="#2B2A26">DOG TREAT TRAIL</text>
+    <text x="82" y="42" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" letter-spacing="1.6" fill="#5B5648">COLUMBUS</text>
+    <text x="82" y="68" font-family="'Fraunces', serif" font-size="26" font-weight="700" fill="#2B2A26">DOG TREAT TRAIL</text>
   </svg>`;
 
   function brandLockupHTML(subtitle) {

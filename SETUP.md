@@ -284,26 +284,32 @@ meant for a short, manually-curated recipient list you set yourself
 `approval.gs`/`verify.gs`. See the comment at the top of `digest.gs`
 for setup steps and why this deliberately isn't a public opt-in list.
 
-## 10. Optional: contributors choosing their own avatar
+## 10. Optional: correcting a contributor's assigned avatar
 
-`profile.html` lets each contributor pick which of the 10 base avatar
-faces represents them (a deliberate change from the design system's
-own sketch, which framed the face as an earned unlock — see
-`admin.html`'s Avatars section). Works with zero setup: picks are
-remembered per-browser in `localStorage`, so the picker sees their own
-choice everywhere, but nobody else does. To make picks visible to
-every visitor instead:
+Each contributor is assigned one of the 10 base avatar faces
+automatically (a deterministic hash of their name) the first time they
+show up on the leaderboard — not a free pick. It starts locked/greyed
+out and unlocks in color at their first verified stop, earns a collar
+at 3, and a crown at 10 (`profile.html`'s `tierClass()`/`avatarSrcFor()`),
+matching the design system's original earned-unlock intent (an earlier
+version of this site let contributors freely pick any face; that's
+been reverted — see `admin.html`'s Avatars section for the full set).
+
+If you ever want to manually override which face a specific name gets
+(the hash lands on a face that just doesn't suit them, e.g.), there's
+an admin-only path — everyday use needs none of this:
 
 1. In the same Apps Script project as `approval.gs`/`verify.gs`/`digest.gs`,
    add a new script file and paste in [`set-avatar.gs`](./set-avatar.gs).
 2. In the same spreadsheet, add a tab named exactly **Contributors**
    with header row `name | avatar_slug`.
 3. Deploy `set-avatar.gs` as its own Web App (same Execute-as-Me,
-   Anyone-can-access pattern as `verify.gs`) and paste the deployment
-   URL into `SET_AVATAR_URL` near the top of `profile.html`.
+   Anyone-can-access pattern as `verify.gs`) and use it (or just edit
+   the Contributors tab directly by hand) to set that row's `avatar_slug`.
 4. Publish the Contributors tab as its own CSV (same "Publish to web"
    flow as `Stops`) and paste that URL into
-   `CONFIG.CONTRIBUTORS_CSV_URL` in `assets/stops-client.js`.
+   `CONFIG.CONTRIBUTORS_CSV_URL` in `assets/stops-client.js` —
+   `profile.html` checks this sheet before falling back to the hash.
 
 Read the security note at the top of `set-avatar.gs` first — like
 `verify.gs`, there's no real auth, but the worst case here is purely
