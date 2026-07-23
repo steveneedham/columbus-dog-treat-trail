@@ -1031,7 +1031,14 @@
   // v0.5: initial load, then keep the map current in the background
   // (timer) and whenever someone pans/zooms to a new area (moveend) —
   // both share the same rate limit so neither can spam the Sheet.
-  refreshStops(true).then(flyToHoodFromHash);
+  // Proactively ask for location once stops are loaded, for the best
+  // out-of-the-box experience (map centered on the visitor immediately,
+  // no need to find and tap "Near me" first). silent=true: a returning
+  // visitor who denied it once shouldn't see an error toast every time
+  // they open the site — browsers don't re-prompt after a decision
+  // either way, so this only ever surfaces the real permission dialog
+  // once.
+  refreshStops(true).then(() => { flyToHoodFromHash(); locateMe(true); });
   map.on('moveend', () => refreshStops(false));
   setInterval(() => refreshStops(false), CONFIG.REFRESH_INTERVAL_MS);
 
@@ -1281,8 +1288,15 @@
   }
 
   // Near me
-  document.getElementById('locate-btn').addEventListener('click', () => {
-    if (!navigator.geolocation) { showToast("Location isn't available in this browser.", "error"); return; }
+  // silent=true (used for the automatic on-load call below) skips the
+  // error toast entirely — a denied/unavailable prompt shouldn't nag a
+  // returning visitor on every single page load, only an explicit
+  // button press earns that feedback.
+  function locateMe(silent) {
+    if (!navigator.geolocation) {
+      if (!silent) showToast("Location isn't available in this browser.", "error");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       pos => {
         const { latitude, longitude } = pos.coords;
@@ -1300,6 +1314,7 @@
         }
       },
       err => {
+        if (silent) return;
         // See guidelines/brand-empty-states.html — the "location access
         // denied" card. err.code 1 === PERMISSION_DENIED specifically;
         // other codes (timeout, position unavailable) get a lighter message.
@@ -1309,7 +1324,8 @@
         );
       }
     );
-  });
+  }
+  document.getElementById('locate-btn').addEventListener('click', () => locateMe(false));
 
   // Suggest-a-stop modal
   const modal = document.getElementById('modal');
