@@ -1,0 +1,235 @@
+<!--
+  Columbus Dog Treat Trail — ScoutSights
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScoutSights — Columbus Dog Treat Trail</title>
+<script src="assets/analytics.js"></script>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  .sample-tag{
+    font-family:var(--font-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:var(--tracking-wide);
+    background:var(--amber); color:var(--white); padding:3px 8px; border-radius:var(--radius-sm); font-weight:700;
+  }
+  .stat-grid{display:grid; grid-template-columns:repeat(4, minmax(120px, 1fr)); gap:10px;}
+  .stat-tile{
+    background:var(--white); border:var(--border-default) solid var(--ink); border-radius:var(--radius-md);
+    padding:10px 12px; box-shadow:var(--shadow-sm);
+  }
+  .stat-tile .n{font-family:var(--font-display); font-weight:700; font-size:21px; line-height:1.1;}
+  .stat-tile .l{font-family:var(--font-mono); font-size:9.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:var(--tracking-wide); margin-top:3px;}
+
+  .spark-wrap{margin-top:14px;}
+  .spark-label{
+    font-family:var(--font-mono); font-size:10px; color:var(--ink-soft); text-transform:uppercase;
+    letter-spacing:var(--tracking-wide); margin-bottom:7px;
+  }
+
+  .pages-list{display:flex; flex-direction:column; gap:6px; margin-top:12px;}
+  .pages-row{display:flex; align-items:center; justify-content:space-between; font-size:11.5px; font-family:var(--font-mono);}
+  .pages-count{color:var(--ink-soft);}
+
+  .ga-note{font-family:var(--font-mono); font-size:10px; color:var(--ink-soft); margin-top:12px; line-height:1.5;}
+
+  #heatmap{ height:420px; border-radius:var(--radius-lg); border:var(--border-default) solid var(--ink); position:relative; overflow:hidden; }
+  .heat-legend{
+    position:absolute; left:14px; bottom:14px; z-index:500; background:var(--white); border:1.5px solid var(--ink);
+    border-radius:var(--radius-md); padding:9px 12px; box-shadow:var(--shadow-sm);
+  }
+  .heat-legend .label{font-family:var(--font-mono); font-size:9.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:var(--tracking-wide); margin-bottom:6px;}
+  .heat-ramp{width:150px; height:7px; border-radius:4px; background:linear-gradient(90deg, rgba(76,107,79,0.2) 0%, #4C6B4F 30%, #C68A2E 65%, #B5502C 100%);}
+  .heat-ticks{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9px; color:var(--ink-soft); margin-top:4px;}
+</style>
+</head>
+<body>
+
+<div class="page page-wide">
+  <div class="page-topbar">
+    <div id="brand"></div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="sample-tag" id="ga-tag" style="display:none;">Sample data — not configured</span>
+      <a class="btn small" href="index.html">← Back to map</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Google Analytics &middot; last 30 days</div>
+    <div id="ga-content"><div class="empty-state">Loading…</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Location interest &middot; anonymous pings</div>
+    <div id="heat-content"><div class="empty-state">Loading…</div></div>
+  </div>
+
+  <div class="footer-note">
+    Both panels are optional and off until configured — see SETUP.md.
+    Neither GA numbers nor pings are tied to a name, email, or account.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="assets/stops-client.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("brand").innerHTML = CDTTSite.brandLockupHTML("ScoutSights — analytics & interest heatmap");
+
+  /* =========================================================
+     CONFIG
+     -----------------------------------------------------------
+     1. GA_REPORT_URL: your ga-report.gs Web App deployment URL
+        (see the setup comment at the top of that file — it needs a
+        GA4 property ID and an oauthScopes manifest edit, not just a
+        paste-and-go deploy like the other .gs endpoints).
+     2. PINGS_CSV_URL: publish the "Pings" tab (created automatically
+        by engagement.gs the first time a ping lands) to the web as
+        CSV, same steps as the Stops tab in SETUP.md section 1.
+     Leave either blank and that panel shows its own "not configured"
+     state — no errors, no partial-broken UI. See SETUP.md section 18.
+     ========================================================= */
+  const CONFIG = {
+    GA_REPORT_URL: "",
+    PINGS_CSV_URL: ""
+  };
+
+  function formatSeconds(s) {
+    const m = Math.floor(s / 60), r = Math.round(s % 60);
+    return m > 0 ? `${m}m ${r}s` : `${r}s`;
+  }
+
+  function drawSparkline(dailySessions) {
+    const w = 100, h = 15.6; // percent-based viewBox, scaled by the svg element's own width/height
+    const max = Math.max(1, ...dailySessions.map(d => d.sessions));
+    const n = dailySessions.length;
+    const barW = n ? (w / n) - 0.5 : 0;
+    const bars = dailySessions.map((d, i) => {
+      const bh = (d.sessions / max) * (h - 1.5);
+      const x = i * (w / n);
+      const y = h - bh;
+      const dt = new Date(Number(d.date.slice(0, 4)), Number(d.date.slice(4, 6)) - 1, Number(d.date.slice(6, 8)));
+      const isWeekend = dt.getDay() === 0 || dt.getDay() === 6;
+      return `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barW.toFixed(2)}" height="${bh.toFixed(2)}" fill="${isWeekend ? "var(--rust)" : "var(--moss)"}" />`;
+    }).join("");
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%; height:56px; display:block;">
+      <line x1="0" y1="${h - 0.4}" x2="${w}" y2="${h - 0.4}" stroke="var(--ink)" stroke-opacity="0.25" stroke-width="0.3"/>
+      ${bars}
+    </svg>`;
+  }
+
+  async function loadGA() {
+    const content = document.getElementById("ga-content");
+    const tag = document.getElementById("ga-tag");
+    if (!CONFIG.GA_REPORT_URL) {
+      tag.style.display = "";
+      content.innerHTML = `
+        <div class="empty-state">
+          Not configured yet — deploy <code>ga-report.gs</code> (needs a GA4 property ID and an
+          <code>oauthScopes</code> manifest edit, see the setup comment at the top of that file) and paste
+          the Web App URL into <code>CONFIG.GA_REPORT_URL</code> above. See SETUP.md section 18.
+        </div>`;
+      return;
+    }
+    try {
+      const res = await fetch(CONFIG.GA_REPORT_URL, { cache: "no-store" });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "GA4 report failed");
+
+      tag.style.display = "none";
+      const pagesHtml = (data.topPages || []).map(p => `
+        <div class="pages-row">
+          <div>${CDTT.escapeHtml(p.path)}</div>
+          <div class="pages-count">${p.views.toLocaleString()}</div>
+        </div>
+      `).join("");
+
+      content.innerHTML = `
+        <div class="stat-grid">
+          <div class="stat-tile"><div class="n mono">${data.users.toLocaleString()}</div><div class="l">Users</div></div>
+          <div class="stat-tile"><div class="n mono">${data.sessions.toLocaleString()}</div><div class="l">Sessions</div></div>
+          <div class="stat-tile"><div class="n mono">${Math.round(data.engagementRate * 100)}%</div><div class="l">Engagement rate</div></div>
+          <div class="stat-tile"><div class="n mono">${formatSeconds(data.avgEngagementSeconds)}</div><div class="l">Avg. engagement</div></div>
+        </div>
+        <div class="spark-wrap">
+          <div class="spark-label">Sessions &middot; last 30 days</div>
+          ${drawSparkline(data.dailySessions || [])}
+        </div>
+        ${pagesHtml ? `<div class="pages-list">${pagesHtml}</div>` : ""}
+        <div class="ga-note">Live from GA4 &middot; assets/analytics.js &middot; cached up to 1 hour.</div>
+      `;
+    } catch (err) {
+      tag.style.display = "";
+      content.innerHTML = `<div class="empty-state">Couldn't load the GA4 report right now — try again in a bit.</div>`;
+    }
+  }
+
+  async function loadHeatmap() {
+    const content = document.getElementById("heat-content");
+    if (!CONFIG.PINGS_CSV_URL) {
+      content.innerHTML = `
+        <div class="empty-state">
+          Not configured yet — publish the "Pings" tab as its own CSV (File &gt; Share &gt; Publish to web,
+          same as the Stops tab) and paste that URL into <code>CONFIG.PINGS_CSV_URL</code> above.
+          See SETUP.md section 18.
+        </div>`;
+      return;
+    }
+    try {
+      const res = await fetch(CONFIG.PINGS_CSV_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Pings fetch failed: ${res.status}`);
+      const text = await res.text();
+      const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+      const points = parsed.data
+        .map(row => [parseFloat(row.lat), parseFloat(row.lng)])
+        .filter(p => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+
+      content.innerHTML = `<div id="heatmap"></div>`;
+      const mapEl = document.getElementById("heatmap");
+      const map = L.map(mapEl, { zoomControl: true }).setView([39.9612, -82.9988], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors', maxZoom: 18
+      }).addTo(map);
+
+      if (points.length) {
+        L.heatLayer(points, {
+          radius: 28, blur: 22, maxZoom: 15,
+          gradient: { 0.2: '#4C6B4F', 0.55: '#C68A2E', 1: '#B5502C' }
+        }).addTo(map);
+        map.fitBounds(L.latLngBounds(points), { padding: [30, 30], maxZoom: 15 });
+      }
+
+      const legend = L.control({ position: "bottomleft" });
+      legend.onAdd = () => {
+        const div = L.DomUtil.create("div", "heat-legend");
+        div.innerHTML = `
+          <div class="label">Ping density</div>
+          <div class="heat-ramp"></div>
+          <div class="heat-ticks"><span>Fewer</span><span>More</span></div>
+        `;
+        return div;
+      };
+      legend.addTo(map);
+
+      if (!points.length) {
+        content.insertAdjacentHTML("beforeend", `<div class="empty-state" style="margin-top:10px;">No pings logged yet.</div>`);
+      }
+    } catch (err) {
+      content.innerHTML = `<div class="empty-state">Couldn't load the pings CSV right now — try again in a bit.</div>`;
+    }
+  }
+
+  loadGA();
+  loadHeatmap();
+</script>
+
+<div class="build-stamp">Last updated 2026-07-22 05:40 UTC</div>
+</body>
+</html>
