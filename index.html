@@ -343,6 +343,15 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="welcome-modal">
+  <div class="modal">
+    <h2 id="welcome-title">Welcome!</h2>
+    <p id="welcome-copy"></p>
+    <div id="welcome-spots" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;"></div>
+    <button class="btn primary" id="welcome-close-btn" style="width:100%; justify-content:center;">Show me the map →</button>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
@@ -1074,6 +1083,121 @@
     setTimeout(() => { suppressAutoBanner = false; updateInfoBanner(); }, 1200);
   }
 
+  // "You are here" marker — shows the visitor's own avatar instead of a
+  // generic dot, using whichever identity this browser already has:
+  // the durable Google-signed-in one from signup.html, or the honor-
+  // system name + avatar pick from profile.html. Anonymous visitors get
+  // the existing "locked" avatar art (already used in profile.html for
+  // an unearned avatar) as a visual nudge, not a new asset.
+  const DEFAULT_ANON_AVATAR = "assets/icons/avatars/avatar-04-locked.svg";
+
+  function avatarSlugForName(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    return String((hash % 10) + 1).padStart(2, "0");
+  }
+
+  function getMyIdentity() {
+    let member = null;
+    try { member = JSON.parse(localStorage.getItem("cdtt_member") || "null"); } catch (err) { /* ignore */ }
+    if (member && member.picture) {
+      return { kind: "member", name: member.name || "you", avatarUrl: member.picture };
+    }
+    let name = null;
+    try { name = localStorage.getItem("cdtt_profile_name"); } catch (err) { /* ignore */ }
+    if (name) {
+      let choices = {};
+      try { choices = JSON.parse(localStorage.getItem("cdtt_avatar_choices") || "{}"); } catch (err) { /* ignore */ }
+      const slug = choices[name] || avatarSlugForName(name);
+      return { kind: "named", name, avatarUrl: `assets/icons/avatars/avatar-${slug}.svg` };
+    }
+    return { kind: "anonymous", name: null, avatarUrl: null };
+  }
+
+  function meMarkerIcon(identity) {
+    const src = identity.avatarUrl || DEFAULT_ANON_AVATAR;
+    const greyed = identity.kind === "anonymous" ? "filter:grayscale(1) opacity(0.75);" : "";
+    return L.divIcon({
+      className: "",
+      html: `<div style="width:34px;height:34px;border-radius:50%;border:2.5px solid #2B2A26;box-shadow:0 0 0 3px rgba(181,80,44,0.35);overflow:hidden;background:#FBF9F3;${greyed}">
+               <img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='${DEFAULT_ANON_AVATAR}';">
+             </div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17]
+    });
+  }
+
+  function meIdentityPopupHTML(identity) {
+    if (identity.kind === "anonymous") {
+      return `
+        <div style="text-align:center;">
+          <div class="pop-name">That's you!</div>
+          <div class="pop-notes">Join the trail or pick a name to show your own avatar here instead of a greyed-out default.</div>
+          <div class="pop-actions" style="justify-content:center;">
+            <a class="pop-btn confirm" href="signup.html">Join the trail →</a>
+            <a class="pop-btn" href="profile.html">Pick a name →</a>
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div style="text-align:center;">
+        <div class="pop-name">You're here, ${identity.name}!</div>
+        <div class="pop-actions" style="justify-content:center;">
+          <a class="pop-btn" href="profile.html">Change avatar →</a>
+        </div>
+      </div>
+    `;
+  }
+
+  let meMarker = null;
+
+  // Welcome tour — the first time "Near me" lands somewhere with stops
+  // nearby in a neighborhood this browser hasn't been welcomed to
+  // before, spotlight its most-confirmed stops instead of just
+  // silently centering the map there.
+  const welcomeModal = document.getElementById('welcome-modal');
+  document.getElementById('welcome-close-btn').addEventListener('click', () => welcomeModal.classList.remove('open'));
+  welcomeModal.addEventListener('click', (e) => { if (e.target === welcomeModal) welcomeModal.classList.remove('open'); });
+
+  function getVisitedHoods() {
+    try { return JSON.parse(localStorage.getItem('cdtt_visited_hoods') || '[]'); }
+    catch (err) { return []; }
+  }
+  function markHoodVisited(hood) {
+    const hoods = getVisitedHoods();
+    if (!hoods.includes(hood)) {
+      hoods.push(hood);
+      try { localStorage.setItem('cdtt_visited_hoods', JSON.stringify(hoods)); } catch (err) { /* ignore */ }
+    }
+  }
+
+  function showWelcomeTour(hood) {
+    const hoodStops = stops
+      .filter(s => s.neighborhood === hood)
+      .sort((a, b) => (b.verify_count || 0) - (a.verify_count || 0))
+      .slice(0, 3);
+    if (!hoodStops.length) return;
+    document.getElementById('welcome-title').textContent = `Welcome to ${hood}!`;
+    document.getElementById('welcome-copy').textContent = hoodStops.length > 1
+      ? "Here are the most-visited stops nearby — walked and confirmed by other neighbors."
+      : "Here's the most-visited stop nearby — walked and confirmed by other neighbors.";
+    document.getElementById('welcome-spots').innerHTML = hoodStops.map(s => {
+      const meta = TYPE_META[s.type] || { label: s.type };
+      return `
+        <div style="display:flex; align-items:center; gap:10px; border:1.5px solid var(--ink); border-radius:3px; padding:8px 10px; background:var(--white);">
+          ${meta.icon ? `<img src="${meta.icon}" style="width:22px;height:22px;flex-shrink:0;">` : ""}
+          <div style="flex:1; text-align:left;">
+            <div class="pop-name" style="font-size:14px;">${s.name}</div>
+            <div class="mono-sub" style="margin:2px 0 0;">${meta.label}${s.verify_count ? ` · confirmed ${s.verify_count}×` : ""}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+    welcomeModal.classList.add('open');
+    markHoodVisited(hood);
+  }
+
   // Near me
   document.getElementById('locate-btn').addEventListener('click', () => {
     if (!navigator.geolocation) { showToast("Location isn't available in this browser.", "error"); return; }
@@ -1081,13 +1205,16 @@
       pos => {
         const { latitude, longitude } = pos.coords;
         map.setView([latitude, longitude], 16);
-        L.circleMarker([latitude, longitude], {
-          radius: 8, color: '#2B2A26', weight: 2, fillColor: '#B5502C', fillOpacity: 1
-        }).addTo(map);
+        if (meMarker) map.removeLayer(meMarker);
+        const identity = getMyIdentity();
+        meMarker = L.marker([latitude, longitude], { icon: meMarkerIcon(identity) }).addTo(map);
+        meMarker.bindPopup(meIdentityPopupHTML(identity));
         logInterestPing(latitude, longitude);
         const nearest = nearestStopTo(latitude, longitude);
         if (!nearest || nearest.miles > NEAR_ME_EMPTY_MILES) {
           showNearMeEmptyBanner(nearest);
+        } else if (nearest.stop.neighborhood && !getVisitedHoods().includes(nearest.stop.neighborhood)) {
+          showWelcomeTour(nearest.stop.neighborhood);
         }
       },
       err => {
