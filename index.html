@@ -244,6 +244,55 @@
   .share-label{ font-family:'JetBrains Mono', monospace; font-size:9px; text-align:center; color:var(--ink-soft); margin-top:4px; text-transform:uppercase; letter-spacing:0.04em; }
   .share-grid{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
   .share-item{ display:flex; flex-direction:column; align-items:center; }
+
+  /* Mobile — the desktop layout above assumes a wide topbar and plenty
+     of vertical room for an always-open filter panel; neither holds on
+     a phone. #nav-toggle-btn is hidden by default (desktop keeps the
+     full nav-links row inline) and only shown here. */
+  #nav-toggle-btn{ display:none; }
+  @media (max-width: 680px){
+    .topbar{ flex-wrap:wrap; padding:10px 12px; gap:8px; }
+    .brand .lockup{ height:30px; }
+    .brand .subtitle{ display:none; }
+    .actions{ position:relative; }
+    .actions-row{ flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+    .actions-row .btn{ padding:7px 10px; font-size:12.5px; }
+    #nav-toggle-btn{ display:flex; }
+
+    .nav-links{
+      display:none; position:absolute; top:100%; right:0; margin-top:8px;
+      flex-direction:column; gap:2px; background:var(--white); border:1.5px solid var(--ink);
+      border-radius:4px; box-shadow:2px 2px 0 rgba(43,42,38,0.15); padding:8px; z-index:1001;
+    }
+    .nav-links.open{ display:flex; }
+    .nav-links a{ padding:6px 8px; }
+
+    /* Filter chips: a permanently-open vertical stack ate most of the
+       screen on a phone — pin a horizontally scrollable strip along the
+       bottom edge instead, one row tall regardless of chip count. */
+    .filters{
+      top:auto; bottom:0; left:0; right:0; flex-direction:row; align-items:center;
+      overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:0;
+      border-width:1.5px 0 0; box-shadow:none; padding:8px 10px; gap:8px;
+    }
+    .filters .label{ display:none; }
+    .chip{ flex-shrink:0; white-space:nowrap; }
+
+    .info-banner{ max-width:calc(100% - 24px); }
+    .info-banner.wide{ max-width:calc(100% - 24px); }
+
+    /* Legend and footer both raised to clear the bottom filter strip.
+       The footer line had no max-width before, so on a narrow viewport
+       it grew past the screen edge as one long line and ran straight
+       over the build-stamp/legend instead of wrapping — constraining
+       its width lets it wrap in place instead. build-stamp is a
+       developer-facing timestamp, low-value on a small screen, so it's
+       hidden here rather than adding a fourth thing to fit at the
+       bottom. */
+    .legend{ bottom:60px; max-width:150px; font-size:9.5px; padding:8px 10px; }
+    .footer{ bottom:60px; max-width:50vw; font-size:9px; text-align:right; }
+    .build-stamp{ display:none; }
+  }
 </style>
 </head>
 <body>
@@ -282,8 +331,11 @@
       <button class="btn icon-only" id="night-toggle" title="Toggle night-walk map filter">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"></path></svg>
       </button>
+      <button class="btn icon-only" id="nav-toggle-btn" title="More pages" aria-expanded="false">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
     </div>
-    <div class="nav-links">
+    <div class="nav-links" id="nav-links">
       <a href="neighborhoods.html">Neighborhoods</a>
       <a href="routes.html">Routes</a>
       <a href="profile.html">Profile</a>
@@ -1239,10 +1291,33 @@
   const shareModal = document.getElementById('share-modal');
   shareModal.addEventListener('click', (e) => { if (e.target === shareModal) shareModal.classList.remove('open'); });
 
+  // Mobile nav toggle — nav-links is inline on desktop (no JS needed
+  // there); on narrow screens it's a dropdown behind this button.
+  const navLinks = document.getElementById('nav-links');
+  const navToggleBtn = document.getElementById('nav-toggle-btn');
+  navToggleBtn.addEventListener('click', () => {
+    const open = navLinks.classList.toggle('open');
+    navToggleBtn.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', (e) => {
+    if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && e.target !== navToggleBtn && !navToggleBtn.contains(e.target)) {
+      navLinks.classList.remove('open');
+      navToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
   // Weekly-updates subscribe modal
   const subscribeModal = document.getElementById('subscribe-modal');
   document.getElementById('subscribe-link').addEventListener('click', (e) => {
     e.preventDefault();
+    // Prefill with the visitor's Google account email if they've already
+    // signed in via signup.html — one less thing to type, and the same
+    // "already told us who you are" identity used for the map's avatar pin.
+    let member = null;
+    try { member = JSON.parse(localStorage.getItem("cdtt_member") || "null"); } catch (err) { /* ignore */ }
+    if (member && member.email) {
+      document.getElementById('subscribe-email').value = member.email;
+    }
     subscribeModal.classList.add('open');
   });
   subscribeModal.addEventListener('click', (e) => { if (e.target === subscribeModal) subscribeModal.classList.remove('open'); });
