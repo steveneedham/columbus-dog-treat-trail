@@ -3,6 +3,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDE6D6">
+<link rel="manifest" href="../../assets/pwa/manifest.webmanifest">
+<link rel="apple-touch-icon" href="../../assets/mark-single-color.svg">
 <title>Columbus Dog Treat Trail — UI Kit</title>
 <link rel="stylesheet" href="../../styles.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
@@ -17,6 +21,13 @@ html,body{margin:0;padding:0;height:100%;font-family:var(--font-body);color:var(
 .legend{bottom:20px;left:20px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);max-width:210px;line-height:1.6}
 .legend .row{display:flex;align-items:center;gap:7px}
 .footer{position:absolute;bottom:8px;right:12px;z-index:1000;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-soft);opacity:0.75;pointer-events:none;background:rgba(251,249,243,0.6);padding:2px 6px;border-radius:2px}
+@media (max-width:640px){
+  .topbar{flex-direction:column;align-items:stretch;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--paper)}
+  .topbar .brand-row{display:flex;justify-content:space-between;align-items:center}
+  .filters{top:auto;bottom:calc(20px + env(safe-area-inset-bottom));left:12px;right:12px;max-height:38vh;overflow:auto}
+  .legend{display:none}
+  .footer{left:12px;right:auto;bottom:calc(8px + env(safe-area-inset-bottom))}
+}
 </style>
 </head>
 <body>
@@ -46,7 +57,7 @@ const TYPE_META = {
 };
 
 const STOPS = [
-  { id: 1, name: 'Mutts & Co.', lat: 39.9446252, lng: -82.9871988, type: 'treat_stand', neighborhood: 'German Village', status: 'verified', notes: 'Pet store at 364 E Whittier St — self-serve dog wash, treats, toys, and food. First confirmed stop on the trail.', venue: 'business' }
+  { id: 1, name: 'Lost & Hounds', lat: 39.9446252, lng: -82.9871988, type: 'treat_stand', neighborhood: 'German Village', status: 'verified', notes: 'Pet store at 364 E Whittier St — self-serve dog wash, treats, toys, and food. First confirmed stop on the trail.', venue: 'business', photoUrl: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&q=80' }
 ];
 
 function isVerified(s) { return s === 'verified' || s === 'seasonal-verified'; }
@@ -61,8 +72,9 @@ function popupHTML(stop) {
     <div style="font-family:var(--font-display);font-weight:600;font-size:16px;margin:0 0 4px;color:var(--ink)">${stop.name}</div>
     <div style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);margin-bottom:8px">${meta.label} · ${stop.neighborhood} · ${badge}${seasonalTag}</div>
     ${stop.venue ? `<div style="font-size:11px;color:var(--ink-soft);margin-bottom:6px;font-style:italic">${stop.venue}</div>` : ''}
+    ${stop.photoUrl ? `<img src="${stop.photoUrl}" alt="${stop.name}" style="width:100%;height:130px;object-fit:cover;border-radius:3px;border:1px solid var(--line);margin-bottom:8px;display:block">` : ''}
     <div style="font-size:12.5px;color:var(--ink);margin-bottom:10px;line-height:1.5">${stop.notes}</div>
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
       <a target="_blank" href={`https://www.google.com/maps/dir/?api=1&destination=${stop.lat},${stop.lng}&travelmode=walking`} style="font-family:var(--font-mono);font-size:10.5px;font-weight:700;padding:5px 8px;border-radius:2px;border:1px solid var(--ink);cursor:pointer;background:var(--paper);text-decoration:none;color:var(--ink);text-transform:uppercase">Google Maps</a>
       <a target="_blank" href={`https://maps.apple.com/?daddr=${stop.lat},${stop.lng}&dirflg=w`} style="font-family:var(--font-mono);font-size:10.5px;font-weight:700;padding:5px 8px;border-radius:2px;border:1px solid var(--ink);cursor:pointer;background:var(--paper);text-decoration:none;color:var(--ink);text-transform:uppercase">Apple Maps</a>
       ${!isVerified(stop.status) ? `<button data-confirm="${stop.id}" style="font-family:var(--font-mono);font-size:10.5px;font-weight:700;padding:5px 8px;border-radius:2px;border:1px solid var(--moss);cursor:pointer;background:var(--moss);color:var(--white);text-transform:uppercase">Mark verified</button>` : ''}
@@ -106,18 +118,39 @@ function renderMarkers() {
 }
 renderMarkers();
 
+function SelfMarkerModal({ open, onClose }) {
+  if (!open) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--backdrop-scrim)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: 'var(--white)', border: '2px solid var(--ink)', borderRadius: 5, boxShadow: 'var(--shadow-lg)', padding: 24, width: 340, textAlign: 'center', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 10, right: 12, background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--ink-soft)' }}>✕</button>
+        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22, marginBottom: 10 }}>That's you!</div>
+        <div style={{ fontSize: 14, color: 'var(--ink)', lineHeight: 1.5, marginBottom: 18 }}>Join the trail or pick a name to show your own avatar here instead of a greyed-out default.</div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+          <a href="./signup.html" style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, padding: '9px 14px', borderRadius: 4, border: '1.5px solid var(--ink)', background: 'var(--moss)', color: 'var(--white)', textDecoration: 'none', textTransform: 'uppercase' }}>Join the trail →</a>
+          <button onClick={() => { onClose(); map.flyTo([39.9469, -82.9934], 16); }} style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, padding: '9px 14px', borderRadius: 4, border: '1.5px solid var(--ink)', background: 'var(--white)', color: 'var(--water,#3E6E8E)', cursor: 'pointer', textTransform: 'uppercase' }}>Pick a name →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Topbar() {
   const [modalOpen, setModalOpen] = React.useState(false);
+  const [selfOpen, setSelfOpen] = React.useState(false);
   return (
     <div className="topbar">
-      <Brand subtitle="Stashes spotted on foot — v0.1 (seed)" logoSrc="../../assets/logo-lockup.svg" />
+      <div className="brand-row">
+        <Brand subtitle="Stashes spotted on foot — v0.1 (seed)" logoSrc="../../assets/logo-lockup.svg" />
+      </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <Button icon="📍" onClick={() => {
           if (!navigator.geolocation) return;
-          navigator.geolocation.getCurrentPosition(pos => map.setView([pos.coords.latitude, pos.coords.longitude], 16));
+          navigator.geolocation.getCurrentPosition(pos => { map.setView([pos.coords.latitude, pos.coords.longitude], 16); setSelfOpen(true); });
         }}>Near me</Button>
         <Button variant="primary" icon="+" onClick={() => setModalOpen(true)}>Suggest a stop</Button>
       </div>
+      <SelfMarkerModal open={selfOpen} onClose={() => setSelfOpen(false)} />
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Suggest a stop" ctaLabel="Email a stop →" ctaHref="mailto:sjneedham@icloud.com?subject=Dog%20Treat%20Trail%20-%20New%20Stop&body=Location%20(address%20or%20cross-streets)%3A%0AType%20(treat%20stand%20%2F%20stick%20library%20%2F%20water%20bowl%20%2F%20toy%20box)%3A%0ANotes%3A%0A">
         This is a seed build with one location — there's no live submission form yet. For now, email the spot (address or cross-streets + what you saw) and it'll get added to the data file directly.
       </Modal>

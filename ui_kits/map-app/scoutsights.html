@@ -1,0 +1,60 @@
+<!-- @dsCard group="Map App" viewport="1280x760" name="ScoutSights — Analytics" subtitle="Intentional addition — GA4 stats + anonymous location-ping heatmap for the maintainer, matching production's scoutsights.html" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ScoutSights — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Brand, Panel, Button, Badge } = window.ColumbusDogTreatTrailDesignSystem_791ae7;
+const DAILY = [12,15,9,18,22,14,19,25,20,16,23,28,21,17,24,30,26,19,22,27,31,24,20,29,33,25,21,28,32,27];
+function Sparkline(){
+  const max = Math.max(...DAILY);
+  return (<svg viewBox="0 0 100 16" preserveAspectRatio="none" style={{width:'100%',height:56,display:'block'}}>
+    {DAILY.map((d,i)=>{const bh=(d/max)*14.5;const x=i*(100/DAILY.length);const w=(100/DAILY.length)-0.5;const isWeekend=i%7===5||i%7===6;
+      return <rect key={i} x={x} y={16-bh} width={w} height={bh} fill={isWeekend?'var(--rust)':'var(--moss)'} />;})}
+  </svg>);
+}
+function Page(){
+  return (
+    <div style={{maxWidth:900,margin:'0 auto',padding:'20px 24px 40px',display:'flex',flexDirection:'column',gap:16}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <Brand subtitle="ScoutSights — analytics & interest heatmap" logoSrc="../../assets/logo-lockup.svg" />
+        <Button>Back to map</Button>
+      </div>
+      <Panel label="Google Analytics · last 30 days">
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
+          <div style={{background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:3,padding:'10px 12px',boxShadow:'var(--shadow-sm)'}}><div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:21}}>842</div><div style={{fontFamily:'var(--font-mono)',fontSize:9.5,color:'var(--ink-soft)',textTransform:'uppercase'}}>Users</div></div>
+          <div style={{background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:3,padding:'10px 12px',boxShadow:'var(--shadow-sm)'}}><div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:21}}>1,203</div><div style={{fontFamily:'var(--font-mono)',fontSize:9.5,color:'var(--ink-soft)',textTransform:'uppercase'}}>Sessions</div></div>
+          <div style={{background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:3,padding:'10px 12px',boxShadow:'var(--shadow-sm)'}}><div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:21}}>64%</div><div style={{fontFamily:'var(--font-mono)',fontSize:9.5,color:'var(--ink-soft)',textTransform:'uppercase'}}>Engagement rate</div></div>
+          <div style={{background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:3,padding:'10px 12px',boxShadow:'var(--shadow-sm)'}}><div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:21}}>1m 48s</div><div style={{fontFamily:'var(--font-mono)',fontSize:9.5,color:'var(--ink-soft)',textTransform:'uppercase'}}>Avg. engagement</div></div>
+        </div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ink-soft)',textTransform:'uppercase',marginBottom:7}}>Sessions · last 30 days</div>
+        <Sparkline />
+        <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ink-soft)',marginTop:10}}>Live from GA4 · cached up to 1 hour.</div>
+      </Panel>
+      <Panel label="Location interest · anonymous pings">
+        <div style={{height:220,borderRadius:4,border:'1.5px solid var(--ink)',position:'relative',overflow:'hidden',background:'linear-gradient(135deg,var(--paper-dark),var(--paper))'}}>
+          <div style={{position:'absolute',left:14,bottom:14,background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:3,padding:'9px 12px',boxShadow:'var(--shadow-sm)'}}>
+            <div style={{fontFamily:'var(--font-mono)',fontSize:9.5,color:'var(--ink-soft)',textTransform:'uppercase',marginBottom:6}}>Ping density</div>
+            <div style={{width:150,height:7,borderRadius:4,background:'linear-gradient(90deg,rgba(76,107,79,0.2) 0%,#4C6B4F 30%,#C68A2E 65%,#B5502C 100%)'}}></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontFamily:'var(--font-mono)',fontSize:9,color:'var(--ink-soft)',marginTop:4}}><span>Fewer</span><span>More</span></div>
+          </div>
+        </div>
+      </Panel>
+      <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ink-soft)'}}>Both panels are optional and off until configured. Neither GA numbers nor pings are tied to a name, email, or account.</div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>

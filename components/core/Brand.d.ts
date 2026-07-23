@@ -6,4 +6,8 @@ export interface BrandProps {
   subtitle?: string;
   /** path to the logo SVG, relative to the consuming page — e.g. "../../assets/logo-lockup.svg" */
   logoSrc?: string;
+  /** intentional addition: show the Scout mascot mark alongside the wordmark */
+  mascot?: boolean;
+  /** path to the mascot mark SVG, relative to the consuming page — e.g. "../../assets/mascot/scout-mark.svg" */
+  mascotSrc?: string;
 }

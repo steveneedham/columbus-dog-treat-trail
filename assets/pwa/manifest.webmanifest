@@ -1,0 +1,14 @@
+{
+  "name": "Columbus Dog Treat Trail",
+  "short_name": "Treat Trail",
+  "description": "A crowdsourced map of dog-treat stashes, stick libraries, water bowls, and toy boxes in Columbus, OH.",
+  "start_url": "../../ui_kits/map-app/index.html",
+  "scope": "../../ui_kits/map-app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDE6D6",
+  "theme_color": "#EDE6D6",
+  "icons": [
+    { "src": "../mark-single-color.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

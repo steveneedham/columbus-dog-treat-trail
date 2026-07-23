@@ -16,9 +16,12 @@
         "patterns": [
           {
             "group": [
+              "assets/**",
+              "assets/pwa/**",
               "components/core/**",
               "components/feedback/**",
-              "ui_kits/map-app/**"
+              "ui_kits/map-app/**",
+              "ui_kits/marketing/**"
             ],
             "message": "Import design-system components from 'index.js', not component internals."
           }
@@ -48,8 +51,8 @@
         "message": "<Badge> status must be one of 'verified' | 'unverified' | 'seasonal'."
       },
       {
-        "selector": "JSXOpeningElement[name.name='Brand'] > JSXAttribute > JSXIdentifier[name!=/^(?:subtitle|logoSrc|key|ref|className|style|children)$/]",
-        "message": "<Brand> doesn't accept that prop. Declared props: subtitle, logoSrc."
+        "selector": "JSXOpeningElement[name.name='Brand'] > JSXAttribute > JSXIdentifier[name!=/^(?:subtitle|logoSrc|mascot|mascotSrc|key|ref|className|style|children)$/]",
+        "message": "<Brand> doesn't accept that prop. Declared props: subtitle, logoSrc, mascot, mascotSrc."
       },
       {
         "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|variant|icon|disabled|onClick|type|key|ref|className|style|children)$/]",

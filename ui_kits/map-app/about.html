@@ -1,0 +1,52 @@
+<!-- @dsCard group="Map App" viewport="900x760" name="About & Why" subtitle="Intentional addition — the project's origin story and mission, for a footer/nav 'About' link" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Brand, Button, Panel } = window.ColumbusDogTreatTrailDesignSystem_791ae7;
+function Page(){
+  return (
+    <div style={{maxWidth:640,margin:'0 auto',padding:'20px 24px 48px',display:'flex',flexDirection:'column',gap:22}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <Brand subtitle="About & why" logoSrc="../../assets/logo-lockup.svg" />
+        <Button>← Back to the map</Button>
+      </div>
+
+      <div style={{display:'flex',alignItems:'center',gap:16}}>
+        <img src="../../assets/mascot/scout-mark.svg" style={{width:64,height:64}} />
+        <h1 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:30,margin:0,lineHeight:1.2}}>A map built from one dog walk in German Village</h1>
+      </div>
+
+      <div style={{fontSize:15,lineHeight:1.7}}>It started with a single loop through German Village — a bowl of biscuits on a porch rail, a pile of sticks under a tree, a water bowl outside a shop door. None of it was hard to find once you knew to look, but none of it was written down anywhere either. Treat Trail exists to write it down.</div>
+
+      <Panel label="Why it's built this way">
+        <div style={{display:'flex',flexDirection:'column',gap:14,fontSize:14,lineHeight:1.6}}>
+          <div><strong style={{fontFamily:'var(--font-display)'}}>Verified, not assumed.</strong> Anyone can suggest a stop, but nothing is trusted until a real person has walked past it and checked. That's slower than crowdsourcing everything instantly — on purpose.</div>
+          <div><strong style={{fontFamily:'var(--font-display)'}}>One person, hand-built.</strong> No company, no ad budget, no growth targets — just a static map and a spreadsheet, kept honest because there's nothing to gain by inflating it.</div>
+          <div><strong style={{fontFamily:'var(--font-display)'}}>A companion, not a copy.</strong> Built the same way as <a href="https://github.com/steveneedham/columbus-pantry-map" style={{color:'var(--rust)'}}>Columbus PantryMap</a> — same "one static page, one Sheet" approach — but for a lighter, more playful find: the good stuff dogs (and their people) stumble on mid-walk.</div>
+        </div>
+      </Panel>
+
+      <Panel label="Who it's for">
+        <div style={{fontSize:14,lineHeight:1.6}}>Anyone walking a dog in Columbus who wants to know what's around the next corner — and anyone who's spotted something worth sharing on their own walk.</div>
+      </Panel>
+
+      <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--ink-soft)',textAlign:'center'}}>Columbus Dog Treat Trail · built and maintained by one person, one walk at a time</div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>

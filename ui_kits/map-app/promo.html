@@ -1,0 +1,104 @@
+<!-- @dsCard group="Map App" viewport="480x760" name="Design Your Promo" subtitle="Intentional addition — business self-serve sponsored-pin wizard, matching production's promo.html" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Design your promo — Columbus Dog Treat Trail</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Brand, Button } = window.ColumbusDogTreatTrailDesignSystem_791ae7;
+const OFFERS = ['10% off for trail walkers','Buy one, get one free','Free item with purchase','Mention the Trail for a treat'];
+const ACCENTS = [{k:'rust',v:'var(--rust)'},{k:'moss',v:'var(--moss)'},{k:'water',v:'var(--water,#3E6E8E)'},{k:'purple',v:'var(--purple,#8A5FB0)'},{k:'amber',v:'var(--amber)'}];
+function Dots({total,active}){return <div style={{display:'flex',gap:6,justifyContent:'center'}}>{Array.from({length:total},(_,i)=><span key={i} style={{height:7,borderRadius:4,background:i===active?'var(--rust)':'var(--line)',width:i===active?18:7,transition:'all .15s ease'}}></span>)}</div>;}
+function Field({label,children}){return <div style={{display:'flex',flexDirection:'column',gap:5}}><label style={{fontFamily:'var(--font-mono)',fontSize:10.5,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--ink-soft)'}}>{label}</label>{children}</div>;}
+const inputStyle={fontFamily:'var(--font-body)',fontSize:14,padding:'10px 11px',borderRadius:3,border:'1.5px solid var(--ink)',background:'var(--white)',color:'var(--ink)'};
+function Wizard(){
+  const [step,setStep]=React.useState(0);
+  const [business,setBusiness]=React.useState('');
+  const [category,setCategory]=React.useState('Pet store');
+  const [neighborhood,setNeighborhood]=React.useState('German Village');
+  const [email,setEmail]=React.useState('');
+  const [offer,setOffer]=React.useState(OFFERS[0]);
+  const [message,setMessage]=React.useState('');
+  const [accent,setAccent]=React.useState('rust');
+  const accentObj=ACCENTS.find(a=>a.k===accent);
+  return (
+    <div style={{maxWidth:420,margin:'0 auto',padding:'20px 20px 40px',display:'flex',flexDirection:'column',gap:16}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <Brand subtitle="Design your promo" logoSrc="../../assets/logo-lockup.svg" />
+        <Button>← Back to map</Button>
+      </div>
+      <div style={{background:'var(--white)',border:'1.5px solid var(--ink)',borderRadius:4,boxShadow:'var(--shadow-md)',padding:24}}>
+      {step===0 && (
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16,textAlign:'center'}}>
+          <div style={{width:64,height:64,borderRadius:'50%',background:'var(--white)',border:'2px solid var(--ink)',boxShadow:'var(--shadow-md)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26}}>🐾</div>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:21}}>Scanned this at a stop?</div>
+          <div style={{fontSize:13.5,color:'var(--ink-soft)',lineHeight:1.55}}>If you're a pet-friendly business near the trail, you can sponsor a stop — a featured, amber-ringed pin with a star badge, plus your own message in the popup every walker sees.</div>
+          <Dots total={4} active={0} />
+          <Button variant="primary" onClick={()=>setStep(1)}>Design my promo →</Button>
+        </div>
+      )}
+      {step===1 && (
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:18}}>Your business</div>
+          <Field label="Business name"><input style={inputStyle} placeholder="e.g. Lost & Hounds" value={business} onChange={e=>setBusiness(e.target.value)} /></Field>
+          <Field label="Category"><select style={inputStyle}>{['Pet store','Groomer','Vet clinic','Bakery / cafe','Trainer','Other'].map(c=><option key={c}>{c}</option>)}</select></Field>
+          <Field label="Nearest neighborhood"><input style={inputStyle} value={neighborhood} onChange={e=>setNeighborhood(e.target.value)} /></Field>
+          <Field label="Contact email"><input style={inputStyle} type="email" placeholder="you@business.com" value={email} onChange={e=>setEmail(e.target.value)} /></Field>
+          <Dots total={4} active={1} />
+          <div style={{display:'flex',gap:10}}><Button onClick={()=>setStep(0)}>← Back</Button><Button variant="primary" onClick={()=>setStep(2)}>Next →</Button></div>
+        </div>
+      )}
+      {step===2 && (
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:18}}>Your promo</div>
+          <Field label="Offer type"><div style={{display:'flex',flexWrap:'wrap',gap:8}}>{OFFERS.map(o=><div key={o} onClick={()=>setOffer(o)} style={{fontFamily:'var(--font-mono)',fontSize:11.5,fontWeight:600,padding:'7px 12px',borderRadius:999,border:'1.5px solid var(--ink)',cursor:'pointer',background:offer===o?'var(--ink)':'var(--white)',color:offer===o?'var(--white)':'var(--ink)'}}>{o}</div>)}</div></Field>
+          <Field label="Message walkers will see"><textarea style={{...inputStyle,minHeight:70,resize:'vertical'}} placeholder="e.g. Show this stop at checkout for 10% off!" value={message} onChange={e=>setMessage(e.target.value)}></textarea></Field>
+          <Field label="Pin color"><div style={{display:'flex',gap:10}}>{ACCENTS.map(a=><div key={a.k} onClick={()=>setAccent(a.k)} style={{width:30,height:30,borderRadius:'50%',border:'2px solid var(--ink)',cursor:'pointer',background:a.v,outline:accent===a.k?'2px solid var(--ink)':'none',outlineOffset:2}}></div>)}</div></Field>
+          <Dots total={4} active={2} />
+          <div style={{display:'flex',gap:10}}><Button onClick={()=>setStep(1)}>← Back</Button><Button variant="primary" onClick={()=>setStep(3)}>Preview →</Button></div>
+        </div>
+      )}
+      {step===3 && (
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:18}}>Preview</div>
+          <div style={{background:'var(--paper-dark)',border:'1.5px solid var(--ink)',borderRadius:4,padding:16,display:'flex',flexDirection:'column',gap:8}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:26,height:26,borderRadius:'50%',border:'2px solid var(--ink)',background:accentObj.v,outline:'2px solid var(--amber)',outlineOffset:2,position:'relative'}}>
+                <span style={{position:'absolute',top:-6,right:-6,fontSize:9,background:'var(--amber)',color:'var(--white)',borderRadius:'50%',width:13,height:13,display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid var(--ink)'}}>★</span>
+              </div>
+              <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:16}}>{business||'Your Business'}</div>
+            </div>
+            <div style={{alignSelf:'flex-start',fontFamily:'var(--font-mono)',fontSize:9.5,fontWeight:700,textTransform:'uppercase',background:'var(--amber)',color:'var(--white)',padding:'2px 7px',borderRadius:2}}>Sponsored</div>
+            <div style={{fontSize:13,lineHeight:1.5}}>{message||'Show this stop for a special offer!'}</div>
+            <div style={{fontFamily:'var(--font-mono)',fontSize:10.5,color:'var(--ink-soft)'}}>{category} · {neighborhood}</div>
+          </div>
+          <div style={{fontSize:12,color:'var(--ink-soft)'}}>This is what your featured pin and popup could look like on the live map — nothing is published yet.</div>
+          <Dots total={4} active={3} />
+          <div style={{display:'flex',gap:10}}><Button onClick={()=>setStep(2)}>← Back</Button><Button variant="primary" onClick={()=>setStep(4)}>Send it in →</Button></div>
+        </div>
+      )}
+      {step===4 && (
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:14,textAlign:'center'}}>
+          <div style={{width:64,height:64,borderRadius:'50%',background:'var(--white)',border:'2px solid var(--ink)',boxShadow:'var(--shadow-md)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26}}>✓</div>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:19}}>Thanks!</div>
+          <div style={{fontSize:13.5,color:'var(--ink-soft)',lineHeight:1.55}}>Your email app should have opened with everything filled in — just hit send and we'll follow up to get your pin live.</div>
+          <Button variant="primary">Back to the map</Button>
+        </div>
+      )}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Wizard />);
+</script>
+</body>
+</html>
