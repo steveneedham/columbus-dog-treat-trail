@@ -219,13 +219,14 @@
 
   /* Empty/offline states — see guidelines/brand-empty-states.html */
   .info-banner{
-    position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:999;
+    position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:1001;
     background:var(--white); border:1.5px solid var(--ink); border-radius:4px;
     box-shadow:2px 2px 0 rgba(43,42,38,0.15); padding:10px 16px; text-align:center;
     font-family:'Inter',sans-serif; font-size:12px; color:var(--ink-soft);
     display:none; max-width:280px;
   }
   .info-banner.show{ display:block; }
+  .info-banner.wide{ max-width:320px; }
   .info-banner .mono-sub{
     display:block; font-family:'JetBrains Mono', monospace; font-size:10px; margin-top:2px;
   }
@@ -889,12 +890,18 @@
   // takes priority (it explains *why* the map might look stale); otherwise
   // flag an empty viewport so panning/zooming out reads as the fix, not a bug.
   const infoBanner = document.getElementById('info-banner');
-  function setBanner(html) {
-    if (!html) { infoBanner.classList.remove('show'); return; }
+  function setBanner(html, wide) {
+    if (!html) { infoBanner.classList.remove('show'); infoBanner.classList.remove('wide'); return; }
     infoBanner.innerHTML = html;
+    infoBanner.classList.toggle('wide', !!wide);
     infoBanner.classList.add('show');
   }
+  // "Near me" briefly takes over this banner with its own teleport prompt
+  // (see below) — suppressed here so the routine moveend/zoomend check
+  // doesn't stomp it mid-read before the visitor's had a chance to tap it.
+  let suppressAutoBanner = false;
   function updateInfoBanner() {
+    if (suppressAutoBanner) return;
     if (!navigator.onLine) {
       setBanner(`⟳ You're offline<span class="mono-sub">showing the last-loaded stops</span>`);
       return;
@@ -1003,6 +1010,70 @@
     );
   });
 
+  // "Near me" found nowhere nearby — offer to teleport to the closest
+  // stop's neighborhood, or to German Village (the trail's pilot area,
+  // same coordinates as the fallback seed stop above) if the visitor
+  // is nowhere near any stop at all, or none are loaded yet.
+  const NEAR_ME_EMPTY_MILES = 2;
+  const GERMAN_VILLAGE_FALLBACK = { lat: 39.9469, lng: -82.9934 };
+
+  function distanceMiles(a, b) {
+    const R = 3958.8;
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  function nearestStopTo(lat, lng) {
+    if (!stops.length) return null;
+    let best = null, bestMiles = Infinity;
+    stops.forEach(s => {
+      const miles = distanceMiles({ lat, lng }, s);
+      if (miles < bestMiles) { bestMiles = miles; best = s; }
+    });
+    return best ? { stop: best, miles: bestMiles } : null;
+  }
+
+  function teleportToNearestOrPilot(nearest) {
+    if (nearest) {
+      const hoodStops = stops.filter(s => s.neighborhood === nearest.stop.neighborhood);
+      if (hoodStops.length > 1) {
+        map.fitBounds(L.latLngBounds(hoodStops.map(s => [s.lat, s.lng])), { padding: [80, 80], maxZoom: 16 });
+      } else {
+        map.setView([nearest.stop.lat, nearest.stop.lng], 16);
+      }
+      showToast(`🐾 Teleported to ${nearest.stop.neighborhood || nearest.stop.name}!`);
+    } else {
+      map.setView([GERMAN_VILLAGE_FALLBACK.lat, GERMAN_VILLAGE_FALLBACK.lng], 15);
+      showToast("🐾 Teleported to German Village — our pilot neighborhood!");
+    }
+  }
+
+  function showNearMeEmptyBanner(nearest) {
+    suppressAutoBanner = true;
+    const nearestBit = nearest
+      ? `the nearest tail-wagging spot in ${nearest.stop.neighborhood || nearest.stop.name}`
+      : `our pilot area in charming German Village`;
+    setBanner(`
+      <div style="display:flex; flex-direction:column; gap:9px; text-align:left;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="assets/mascot-scout.svg" alt="Scout" style="width:36px;height:36px;flex-shrink:0;">
+          <div>🐾 Ready to sniff out the fun? Nothing's nearby just yet.</div>
+        </div>
+        <div class="mono-sub" style="margin:0;">Let's teleport you and your pup to ${nearestBit} — we'll focus your map right where the treats, trails, and tail wags are waiting.</div>
+        <button class="btn primary" id="teleport-btn" style="width:100%; justify-content:center;">🐶 Teleport me there</button>
+      </div>
+    `, true);
+    document.getElementById('teleport-btn').addEventListener('click', () => {
+      teleportToNearestOrPilot(nearest);
+      setBanner(null);
+    });
+    setTimeout(() => { suppressAutoBanner = false; updateInfoBanner(); }, 1200);
+  }
+
   // Near me
   document.getElementById('locate-btn').addEventListener('click', () => {
     if (!navigator.geolocation) { showToast("Location isn't available in this browser.", "error"); return; }
@@ -1014,6 +1085,10 @@
           radius: 8, color: '#2B2A26', weight: 2, fillColor: '#B5502C', fillOpacity: 1
         }).addTo(map);
         logInterestPing(latitude, longitude);
+        const nearest = nearestStopTo(latitude, longitude);
+        if (!nearest || nearest.miles > NEAR_ME_EMPTY_MILES) {
+          showNearMeEmptyBanner(nearest);
+        }
       },
       err => {
         // See guidelines/brand-empty-states.html — the "location access
