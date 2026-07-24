@@ -25,13 +25,13 @@
   };
 
   // Icon paths match components/core/Chip.jsx's icon prop and
-  // guidelines/brand-icons.html — "mixed" has no dedicated glyph there.
+  // guidelines/brand-icons.html.
   const TYPE_META = {
     treat_stand:   { label: "Treat stand",   color: "#B5502C", icon: "assets/icons/treat.svg" },
     stick_library: { label: "Stick library", color: "#4C6B4F", icon: "assets/icons/stick.svg" },
     water_bowl:    { label: "Water bowl",     color: "#3E6E8E", icon: "assets/icons/water-bowl.svg" },
     toy_box:       { label: "Toy box",        color: "#8A5FB0", icon: "assets/icons/toy.svg" },
-    mixed:         { label: "Mixed",          color: "#C68A2E" }
+    mixed:         { label: "Mixed",          color: "#C68A2E", icon: "assets/icons/mixed.svg" }
   };
   const TYPE_META_KEYS = Object.keys(TYPE_META);
 
