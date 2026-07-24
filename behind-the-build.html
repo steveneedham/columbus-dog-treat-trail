@@ -1,0 +1,156 @@
+<!--
+  Columbus Dog Treat Trail — Behind the Build
+  Copyright (c) 2026 Steven Needham. Licensed under the MIT License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behind the Build — Columbus Dog Treat Trail</title>
+<meta name="description" content="A technical case study and colophon for the Columbus Dog Treat Trail.">
+<script src="assets/analytics.js"></script>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  body{background:var(--paper);}
+  .case{max-width:860px;margin:0 auto;padding:24px 22px 56px;}
+  .case-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:52px;}
+  .case-topbar .lockup{height:46px;width:auto;}
+  .eyebrow{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:var(--tracking-wide);text-transform:uppercase;color:var(--rust);margin-bottom:12px;}
+  h1{font-family:var(--font-display);font-size:clamp(38px,7vw,72px);font-weight:700;line-height:.98;letter-spacing:-.035em;margin:0;max-width:760px;}
+  .dek{font-size:18px;line-height:1.65;color:var(--ink-soft);max-width:680px;margin:24px 0 0;}
+  .hero-rule{border:0;border-top:2px solid var(--ink);margin:48px 0 0;}
+  .section{display:grid;grid-template-columns:150px minmax(0,1fr);gap:34px;padding:44px 0;border-bottom:1px solid var(--line);}
+  .section-label{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:var(--tracking-wide);color:var(--ink-soft);padding-top:5px;}
+  .section h2{font-family:var(--font-display);font-size:28px;line-height:1.15;margin:0 0 16px;}
+  .section h3{font-family:var(--font-display);font-size:17px;margin:26px 0 8px;}
+  .section p,.section li{font-size:14px;line-height:1.72;}
+  .section p{margin:0 0 14px;}
+  .section ul{margin:0;padding-left:19px;}
+  .section li{margin-bottom:7px;}
+  .pull{font-family:var(--font-display);font-size:24px;line-height:1.35;border-left:3px solid var(--rust);padding:4px 0 4px 20px;margin:24px 0;}
+  .system-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:24px 0;}
+  .flow-step{border:1.5px solid var(--ink);border-radius:var(--radius-md);background:var(--white);box-shadow:var(--shadow-sm);padding:13px 11px;}
+  .flow-step strong{display:block;font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:var(--tracking-mid);color:var(--rust);margin-bottom:6px;}
+  .flow-step span{font-size:12px;line-height:1.4;}
+  .stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .stack-card{border:1.5px solid var(--ink);border-radius:var(--radius-md);background:var(--white);padding:14px;box-shadow:var(--shadow-sm);}
+  .stack-card h3{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:var(--tracking-wide);color:var(--rust);margin:0 0 8px;}
+  .stack-card p{font-size:12.5px;line-height:1.55;margin:0;color:var(--ink-soft);}
+  .case-footer{display:flex;justify-content:space-between;gap:20px;padding-top:28px;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-soft);}
+  .case a{color:var(--rust);}
+  @media(max-width:680px){
+    .case{padding:18px 16px 42px;}
+    .case-topbar{margin-bottom:38px;}
+    .case-topbar .lockup{height:38px;}
+    .case-topbar .btn{font-size:0;width:38px;height:38px;padding:0;justify-content:center;}
+    .case-topbar .btn::before{content:"←";font-size:16px;}
+    .section{grid-template-columns:1fr;gap:12px;padding:34px 0;}
+    .section-label{padding:0;}
+    .system-flow{grid-template-columns:1fr 1fr;}
+    .stack{grid-template-columns:1fr;}
+    .case-footer{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+<main class="case">
+  <header class="case-topbar">
+    <a href="index.html" aria-label="Columbus Dog Treat Trail map"><img class="lockup" src="assets/logo-lockup.svg" alt="Columbus Dog Treat Trail"></a>
+    <a class="btn small" href="index.html">← Back to the map</a>
+  </header>
+
+  <div class="eyebrow">Technical case study · July 2026</div>
+  <h1>Behind the Build</h1>
+  <p class="dek">How a handful of dog-walk discoveries became a neighborhood map—and how a static site, a spreadsheet, and a deliberately small technical system keep it useful.</p>
+  <hr class="hero-rule">
+
+  <section class="section">
+    <div class="section-label">01 · The idea</div>
+    <div>
+      <h2>A tiny observation with a map-shaped answer</h2>
+      <p>The project started on foot: biscuit jars on porch rails, stick libraries under trees, and water bowls outside shops. The interesting part was not any one stop. It was that the network existed without a shared record.</p>
+      <p>The first product decision was also the most important: make the map the product. No account wall, no feed, no separate app to install. A walker should be able to open a link, see what is nearby, and understand which reports someone has actually checked.</p>
+      <div class="pull">The map looks simple because the complicated parts stay behind the walk.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">02 · System</div>
+    <div>
+      <h2>A lightweight publishing pipeline</h2>
+      <p>The app separates public suggestions from trusted map data. A Google Form collects reports into a submissions sheet. Review and verification happen before an approved stop reaches the published CSV consumed by the map.</p>
+      <div class="system-flow" aria-label="Data publishing flow">
+        <div class="flow-step"><strong>01</strong><span>A neighbor suggests a stop</span></div>
+        <div class="flow-step"><strong>02</strong><span>The report enters a review queue</span></div>
+        <div class="flow-step"><strong>03</strong><span>The location is checked on foot</span></div>
+        <div class="flow-step"><strong>04</strong><span>The map refreshes from the Sheet</span></div>
+      </div>
+      <p>This design is intentionally modest. The spreadsheet is readable by a non-developer, the static site has no deployment server to maintain, and the verification state remains visible instead of being hidden behind a generic pin.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">03 · Techniques</div>
+    <div>
+      <h2>The useful trickery</h2>
+      <h3>Static site, live data</h3>
+      <p>Leaflet renders the interface while Papa Parse turns a published Sheet into structured stop data in the browser. The map can change without rebuilding the site, but the production surface stays portable HTML, CSS, and JavaScript.</p>
+      <h3>Progressive enhancement</h3>
+      <p>Location, sharing, installation, subscriptions, and write-back endpoints are treated as enhancements. When an API or endpoint is unavailable, the core map still loads and several actions fall back to plain links or email.</p>
+      <h3>Geospatial logic without a platform backend</h3>
+      <p>The browser calculates distances, finds the nearest stop, groups neighborhood collections, builds suggested walks, and handles deep links. OpenStreetMap supplies the geographic canvas; the project’s own data supplies the local meaning.</p>
+      <h3>Trust expressed as interface</h3>
+      <p>Verified, unverified, and seasonal states are not back-office fields. They control pin rings, badges, filters, and copy. The data model and visual system say the same thing: a report is useful, but a checked report is different.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">04 · Design</div>
+    <div>
+      <h2>A field notebook over a stock map</h2>
+      <p>The visual system uses parchment, near-black ink, hard offset shadows, and small radii. Fraunces carries the personality; Inter handles conversation; JetBrains Mono labels metadata like notes in the margin.</p>
+      <p>OpenStreetMap tiles are warmed and slightly desaturated so the base geography recedes. Stop colors and status rings remain clear above it. On small screens, interface text gives way to defined icons while accessible names and tooltips preserve meaning.</p>
+      <p>The voice follows the same rules as the verification model: casual, specific, and honest about what is automated, what is manual, and what still needs a walk.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">05 · Lessons</div>
+    <div>
+      <h2>What the build made clear</h2>
+      <ul>
+        <li>Small systems can still have real architecture; the best boundary here is between suggestion and publication.</li>
+        <li>A spreadsheet can be a sensible operational database when the scale, editor, and review process are explicit.</li>
+        <li>Graceful fallbacks matter more than feature count for a neighborhood utility opened outdoors on a phone.</li>
+        <li>Accessibility works best when it is structural: semantic buttons, keyboard-safe controls, readable contrast, and labels that survive icon-only layouts.</li>
+        <li>A visible “unverified” state is more trustworthy than pretending every crowdsourced point has equal certainty.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">Technical colophon</div>
+    <div>
+      <h2>What it uses</h2>
+      <div class="stack">
+        <div class="stack-card"><h3>Interface</h3><p>Semantic HTML, custom CSS, and vanilla JavaScript. No framework and no build step.</p></div>
+        <div class="stack-card"><h3>Mapping</h3><p>Leaflet with OpenStreetMap tiles, custom div icons, browser geolocation, and client-side distance calculations.</p></div>
+        <div class="stack-card"><h3>Data</h3><p>Google Sheets published as CSV, parsed in the browser with Papa Parse; Google Forms for public submissions.</p></div>
+        <div class="stack-card"><h3>Automation</h3><p>Google Apps Script for approval, verification, subscriptions, engagement, and reporting workflows.</p></div>
+        <div class="stack-card"><h3>Delivery</h3><p>GitHub Pages, a web app manifest, service-worker caching, and responsive browser-first installation.</p></div>
+        <div class="stack-card"><h3>Identity</h3><p>Fraunces, Inter, and JetBrains Mono; a purpose-built token system, SVG marks, icons, and Scout mascot assets.</p></div>
+        <div class="stack-card"><h3>Measurement</h3><p>Google Analytics 4 and ScoutSights reporting, with anonymous location-interest pings where configured.</p></div>
+        <div class="stack-card"><h3>License & data</h3><p>MIT-licensed project code; Leaflet under BSD-2-Clause; OpenStreetMap data under ODbL.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="case-footer">
+    <span>Built and maintained by Steven Needham</span>
+    <span><a href="index.html">Explore the map</a> · <a href="https://github.com/steveneedham/columbus-dog-treat-trail">View the source</a></span>
+  </footer>
+</main>
+</body>
+</html>
