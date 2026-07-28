@@ -248,6 +248,24 @@
   .share-label{ font-family:'JetBrains Mono', monospace; font-size:9px; text-align:center; color:var(--ink-soft); margin-top:4px; text-transform:uppercase; letter-spacing:0.04em; }
   .share-grid{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
   .share-item{ display:flex; flex-direction:column; align-items:center; }
+  .install-hint{
+    display:none; position:absolute; left:12px; right:12px; bottom:60px; z-index:1002;
+    align-items:center; gap:10px; padding:10px 12px;
+    background:rgba(251,249,243,0.97); border:1.5px solid var(--ink); border-radius:4px;
+    box-shadow:2px 2px 0 rgba(43,42,38,0.15);
+  }
+  .install-hint-icon{ width:20px; height:20px; flex:0 0 auto; }
+  .install-hint-copy{ min-width:0; flex:1; }
+  .install-hint-title{ display:block; font-family:'Fraunces',serif; font-size:14px; font-weight:700; line-height:1.15; }
+  .install-hint-detail{ display:block; margin-top:2px; font-size:10px; line-height:1.3; color:var(--ink-soft); }
+  .install-hint-action{
+    flex:0 0 auto; padding:7px 9px; border:1.5px solid var(--rust); border-radius:3px;
+    background:var(--rust); color:var(--white); font:600 11px 'Inter',sans-serif; cursor:pointer;
+  }
+  .install-hint-close{
+    width:28px; height:28px; flex:0 0 auto; padding:0; border:0; background:transparent;
+    color:var(--ink); font-size:20px; line-height:1; cursor:pointer;
+  }
 
   /* Mobile — the desktop layout above assumes a wide topbar and plenty
      of vertical room for an always-open filter panel; neither holds on
@@ -292,6 +310,7 @@
 
     .info-banner{ max-width:calc(100% - 24px); }
     .info-banner.wide{ max-width:calc(100% - 24px); }
+    .install-hint.visible{ display:flex; }
 
     /* Legend and footer both raised to clear the bottom filter strip.
        The footer line had no max-width before, so on a narrow viewport
@@ -306,17 +325,20 @@
     .build-stamp{ display:none; }
   }
 </style>
-<link rel="manifest" href="manifest.json">
-
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
-  }
-</script>
 </head>
 <body>
 
 <div id="map"></div>
+
+<aside class="install-hint" id="install-hint" aria-labelledby="install-hint-title">
+  <img class="install-hint-icon" src="assets/mark-dog-face-v2.svg" alt="">
+  <div class="install-hint-copy">
+    <strong class="install-hint-title" id="install-hint-title">Keep the trail handy</strong>
+    <span class="install-hint-detail" id="install-hint-detail">Install this map as an app.</span>
+  </div>
+  <button class="install-hint-action" id="install-hint-action" type="button">Install</button>
+  <button class="install-hint-close" id="install-hint-close" type="button" aria-label="Dismiss install suggestion" title="Dismiss">×</button>
+</aside>
 
 <div class="topbar">
   <div class="brand">
@@ -1451,6 +1473,72 @@
       navigator.serviceWorker.register('sw.js').catch(() => { /* offline shell just won't be available — the site still works fully online */ });
     });
   }
+
+  // Offer a quiet, mobile-only path to installing the trail. Chromium
+  // supplies a native prompt; iOS requires the Share > Add to Home Screen
+  // route, so the same control becomes a short instructional hint there.
+  (() => {
+    const hint = document.getElementById('install-hint');
+    const action = document.getElementById('install-hint-action');
+    const detail = document.getElementById('install-hint-detail');
+    const close = document.getElementById('install-hint-close');
+    const mobile = window.matchMedia('(max-width: 680px)');
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    let installPrompt = null;
+
+    try {
+      if (standalone || localStorage.getItem('cdtt_install_hint_dismissed') === '1') return;
+    } catch (err) {
+      if (standalone) return;
+    }
+
+    const showHint = () => {
+      if (!mobile.matches) return;
+      if (isIOS) {
+        detail.textContent = 'Tap Share, then Add to Home Screen.';
+        action.textContent = 'How';
+      }
+      hint.classList.add('visible');
+    };
+
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      installPrompt = event;
+      action.hidden = false;
+      action.textContent = 'Install';
+      detail.textContent = 'Install this map as an app.';
+      showHint();
+    });
+
+    // Browsers that do not emit beforeinstallprompt still get a useful
+    // browser-menu hint, shown after the map has settled.
+    window.setTimeout(showHint, 1800);
+
+    action.addEventListener('click', async () => {
+      if (installPrompt) {
+        installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
+        if (choice.outcome === 'accepted') hint.classList.remove('visible');
+        installPrompt = null;
+        return;
+      }
+      detail.textContent = isIOS
+        ? 'In Safari: tap Share, then Add to Home Screen.'
+        : 'Open your browser menu and choose Install app or Add to Home screen.';
+      action.hidden = true;
+    });
+
+    close.addEventListener('click', () => {
+      hint.classList.remove('visible');
+      try { localStorage.setItem('cdtt_install_hint_dismissed', '1'); } catch (err) { /* nonessential preference */ }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      hint.classList.remove('visible');
+      installPrompt = null;
+    });
+  })();
 </script>
 
 </body>
