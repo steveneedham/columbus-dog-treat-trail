@@ -21,7 +21,7 @@
     // Optional: publish a "Contributors" tab (columns: name, avatar_slug)
     // as its own CSV so profile.html's avatar picker is visible to every
     // visitor, not just the browser that made the pick. See SETUP.md.
-    CONTRIBUTORS_CSV_URL: ""
+    CONTRIBUTORS_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRConYdz281L3B8jXoR6ocsHiHzox0rLsPauOPp3uTj9OWjNj2l1lHhGBp4X3Zo56LK0UaoXd4R5ulB/pub?gid=1763947877&single=true&output=csv"
   };
 
   // Icon paths match components/core/Chip.jsx's icon prop and
