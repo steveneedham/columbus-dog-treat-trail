@@ -17,7 +17,7 @@
     // way as the Stops tab, see SETUP.md) to power moderation.html's
     // pending-submissions queue. Leave blank to keep that page in its
     // "not configured yet" state.
-    SUBMISSIONS_CSV_URL: "",
+    SUBMISSIONS_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRConYdz281L3B8jXoR6ocsHiHzox0rLsPauOPp3uTj9OWjNj2l1lHhGBp4X3Zo56LK0UaoXd4R5ulB/pub?gid=1965108209&single=true&output=csv",
     // Optional: publish a "Contributors" tab (columns: name, avatar_slug)
     // as its own CSV so profile.html's avatar picker is visible to every
     // visitor, not just the browser that made the pick. See SETUP.md.
